@@ -159,8 +159,7 @@ async fn refresh_token(
             }
 
             // Check if token is blacklisted
-            let conn = data.redis_pool.get().await;
-            match conn {
+            match data.redis_pool.get().await {
                 Ok(mut conn) => {
                     let is_blacklisted: Option<String> = conn.get(decoded_data.claims.jti.clone()).await.ok();
                     match is_blacklisted {
@@ -174,13 +173,6 @@ async fn refresh_token(
                                 (decoded_data.claims.exp - (chrono::Utc::now().timestamp() as usize)) as u64
                             ).await.unwrap();
 
-                            // DEBUG Print all blacklisted keys so far
-                            let blacklisted_keys: Vec<String> = conn.keys("*").await.unwrap();
-                            println!("BLACKLIST");
-                            for key in blacklisted_keys {
-                                println!("Blacklisted key: {}", key);
-                            }
-
                             // Refresh token pair
                             HttpResponse::Ok().json(JwtTokenPair::generate_for(
                                 decoded_data.claims.sub,
@@ -189,9 +181,7 @@ async fn refresh_token(
                         }
                     }
                 },
-                Err(_) => {
-                    HttpResponse::InternalServerError().body("Connection to Redis failed.")
-                }
+                Err(_) => HttpResponse::InternalServerError().body("Connection to Redis failed.")
             }
         },
         None => HttpResponse::Unauthorized().body("Invalid or expired refresh token")
