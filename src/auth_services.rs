@@ -2,6 +2,7 @@ use actix_web::{get, post, web, HttpResponse, Responder};
 use sqlx::{self, Row};
 use serde::{Deserialize, Serialize};
 use crate::AppState;
+use crate::jwt_token_pair::JwtTokenPair;
 
 // Represents a user
 #[derive(Serialize, Deserialize)]
@@ -9,6 +10,13 @@ pub struct User {
     email: String,
     username: String,
     password: String,
+}
+
+impl User {
+    // Compares given password to user password
+    pub fn verify_password(&self, password: &str) -> bool {
+        self.password == password
+    }
 }
 
 // Response to a create user request
@@ -70,12 +78,39 @@ pub async fn create_user(
     match res {
         Ok(record) => HttpResponse::Ok().json(CreateUserResponse {
             id: record.get("id"),
-            user: User {
-                email: user.email,
-                username: user.username,
-                password: user.password,
-            }
+            user
         }),
         Err(_) => HttpResponse::InternalServerError().body("Error while inserting user")
+    }
+}
+
+#[post("api/token/get/")]
+async fn login(
+    user: web::Json<User>,
+    data: web::Data<AppState>
+) -> impl Responder {
+    // Look up user with given email
+    let query = "select email, password from users where email = $1";
+    let res = sqlx::query(query)
+        .bind(user.email.clone())
+        .fetch_optional(&data.db)
+        .await;
+
+    // Send jwt token pair on successful login
+    match res {
+        Ok(row) => {
+            match row {
+                Some(entry) => {
+                    if user.verify_password(&entry.get::<String, _>("password")) {
+                        let user_email: String = entry.get("email");
+                        HttpResponse::Ok().json(JwtTokenPair::generate(user_email))
+                    } else {
+                        HttpResponse::NotFound().body("Wrong password")
+                    }
+                },
+                None => HttpResponse::NotFound().body("No user found with given credentials")
+            }
+        },
+        Err(_) => HttpResponse::InternalServerError().body("Error while logging in")
     }
 }
