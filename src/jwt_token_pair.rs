@@ -1,11 +1,12 @@
 use jsonwebtoken::{encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
+use std::process::Command;
 
 #[derive(Serialize, Deserialize)]
-struct Claims {
-    sub: String,        // subject (whom token refers to)
-    exp: usize,         // token expiration date
-    token_type: String, // token type (access or refresh)
+pub struct Claims {
+    pub sub: String,        // subject (whom token refers to)
+    pub exp: usize,         // token expiration date
+    pub token_type: TokenType, // token type (access or refresh)
 }
 
 // Represents a token pair
@@ -15,18 +16,25 @@ pub struct JwtTokenPair {
     refresh_token: String,
 }
 
+// Token types
+#[derive(Serialize, Deserialize, PartialEq)]
+pub enum TokenType {
+    Access,
+    Refresh,
+}
+
 impl JwtTokenPair {
-    pub fn generate(user_email: String) -> Self {
+    pub fn generate_for(user_email: String, secret: String) -> Self {
         let expiration = chrono::Utc::now() + chrono::Duration::minutes(10);
         let access_claims = Claims {
             sub: user_email.clone(),
             exp: expiration.timestamp() as usize,
-            token_type: "access".to_string(),
+            token_type: TokenType::Access,
         };
         let refresh_claims = Claims {
             sub: user_email.clone(),
             exp: expiration.timestamp() as usize,
-            token_type: "refresh".to_string(),
+            token_type: TokenType::Refresh,
         };
 
         // Return a freshly generated token pair
@@ -34,13 +42,28 @@ impl JwtTokenPair {
             access_token: encode(
                 &Header::default(),
                 &access_claims,
-                &EncodingKey::from_secret(b"secret")
+                &EncodingKey::from_secret(secret.as_bytes())
             ).unwrap(),
             refresh_token: encode(
                 &Header::default(),
                 &refresh_claims,
-                &EncodingKey::from_secret(b"secret")
+                &EncodingKey::from_secret(secret.as_bytes())
             ).unwrap()
         }
     }
+}
+
+// Generates shared secret using openssl
+pub fn generate_shared_secret() -> String{
+    String::from_utf8(Command::new("openssl")
+        .arg("rand")
+        .arg("-base64")
+        .arg("32")
+        .output()
+        .expect("Failed to generate shared secret. Make sure openssl is installed.")
+        .stdout
+    )
+    .unwrap()
+    .trim()
+    .to_string()
 }
