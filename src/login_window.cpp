@@ -1,16 +1,17 @@
 #include "login_window.h"
 
+#include "ui_login_window.h"
+
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 #include <nlohmann/json.hpp>
 
 #include <QMessageBox>
-#include <QtConcurrent/QtConcurrent>
+#include <QThread>
 
 #include "api.h"
-
-#include "ui_login_window.h"
+#include "user_dashboard.h"
 
 LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -174,19 +175,13 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
         qDebug() << "LOGIN_SUCCESSFUL";
         // TODO: open user dashboard
 
-        /*cURLpp::terminate(); // Cleanup cURLpp
+        cURLpp::terminate(); // Cleanup cURLpp
         this->close(); // Close current window
 
         // Proceed to player's personal shelter
-        auto *shelter = new PersonalAccountWindow(
-            {
-                response_json.at("access").get<std::string>(),
-                response_json.at("refresh").get<std::string>(),
-            },
-            emailLineEdit->text().toStdString()
-        );
+        auto *shelter = new UserDashboard;
         shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
-        shelter->show();*/
+        shelter->show();
     }
 }
 
