@@ -5,9 +5,19 @@ set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
-file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
-file(GLOB_RECURSE FORMS ${CMAKE_CURRENT_SOURCE_DIR}/forms/*.ui)
+file(GLOB_RECURSE SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*/*.cpp
+)
+file(GLOB_RECURSE HEADERS
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/*/*.hpp
+)
+file(GLOB_RECURSE FORMS
+        ${CMAKE_CURRENT_SOURCE_DIR}/forms/*.ui
+)
 
 # libcurl (cURLpp dependency)
 find_package(CURL REQUIRED)

@@ -3,15 +3,16 @@
 
 #include <string>
 #include <mutex>
+#include <nlohmann/json.hpp>
 
 namespace API {
     // Provides a way to summarise a request result.
     struct RequestResult {
         bool ok;
-        std::string message;
+        nlohmann::json response;
 
-        static RequestResult success() { return RequestResult{true}; }
-        static RequestResult error(const std::string& message) { return RequestResult{false, message}; }
+        static RequestResult success(const nlohmann::json& body) { return RequestResult{true, body}; }
+        static RequestResult error(const nlohmann::json& body) { return RequestResult{false, body}; }
     };
 
     // Represents an Access/Refresh token pair.

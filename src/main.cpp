@@ -1,5 +1,5 @@
 #include <QApplication>
-#include <login_window.h>
+#include <windows/login_window.h>
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);

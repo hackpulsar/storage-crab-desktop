@@ -1,10 +1,13 @@
-#include "user_dashboard.h"
+#include "windows/user_dashboard.h"
 #include "ui_user_dashboard.h"
 
 #include <QMessageBox>
+#include <requests.hpp>
 
+#include "api.h"
 #include "utils/styles_loader.hpp"
-#include "login_window.h"
+#include "windows/login_window.h"
+#include "widgets/uploaded_file_panel.h"
 
 UserDashboard::UserDashboard(
     const API::TokenPair& tokenPair,
@@ -48,15 +51,43 @@ UserDashboard::UserDashboard(
     topPanelLayout->addStretch();
     topPanelLayout->addWidget(usernameLabel);
 
-    // Middle panel
-    middlePanelLayout = new QVBoxLayout;
-
     filesTitle = new QLabel(centralWidget);
     filesTitle->setText("Files");
     filesTitle->setStyleSheet("font-size: 24pt");
 
-    middlePanelLayout->addWidget(filesTitle);
+    // Middle panel
+    middlePanelBaseWidget = new QWidget(centralWidget);
+    middlePanelLayout = new QVBoxLayout(middlePanelBaseWidget);
+
+    scrollArea = new QScrollArea;
+    scrollArea->setWidgetResizable(true);
+
+    // DEBUG add test file panels
+
+    auto result = this->retrieveFiles();
+    if (result.ok) {
+        for (const auto& file_data : result.response) {
+            uploadedFilePanels.push_back(new UploadedFilePanel(
+                file_data.at("filename"),
+                file_data.at("path"),
+                std::to_string(file_data.at("size").get<float>() / (1000.f * 1000.f)) + "mb",
+                scrollArea
+            ));
+            middlePanelLayout->addWidget(uploadedFilePanels.back());
+        }
+    } else {
+        QMessageBox::critical(
+            this,
+            "Error",
+            "Couldn't retrieve files.",
+            QMessageBox::Ok
+        );
+    }
+
     middlePanelLayout->addStretch();
+
+    middlePanelBaseWidget->setLayout(middlePanelLayout);
+    scrollArea->setWidget(middlePanelBaseWidget);
 
     // Bottom panel
     bottomPanelLayout = new QHBoxLayout;
@@ -70,8 +101,8 @@ UserDashboard::UserDashboard(
 
     layout = new QVBoxLayout(centralWidget);
     layout->addLayout(topPanelLayout);
-    layout->addLayout(middlePanelLayout);
-    layout->addStretch();
+    layout->addWidget(filesTitle);
+    layout->addWidget(scrollArea);
     layout->addLayout(bottomPanelLayout);
 
     connect(logoutButton, &QPushButton::clicked, this, &UserDashboard::onLogoutButtonClicked);
@@ -150,4 +181,8 @@ void UserDashboard::closeEvent(QCloseEvent *event) {
     loginWindow->show();
 
     QWidget::closeEvent(event);
+}
+
+API::RequestResult UserDashboard::retrieveFiles() const {
+    return API::Requests::GET(API::GET_FILES_URL, this->tokenPair.getAccess());
 }

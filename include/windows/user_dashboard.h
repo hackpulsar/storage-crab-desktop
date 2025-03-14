@@ -6,9 +6,13 @@
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
+#include <QScrollArea>
+
 #include <thread>
+#include <nlohmann/json_fwd.hpp>
 
 #include "token_pair.h"
+#include "widgets/uploaded_file_panel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -47,6 +51,9 @@ private:
     // Overrides base window close event
     void closeEvent(QCloseEvent *event) override;
 
+    // Retrieves files related to current user from remote storage
+    API::RequestResult retrieveFiles() const;
+
     Ui::UserDashboard *ui;
     QWidget *centralWidget;
 
@@ -60,6 +67,8 @@ private:
     QLabel *usernameLabel;
 
     // Middle panel
+    QScrollArea *scrollArea;
+    QWidget *middlePanelBaseWidget;
     QVBoxLayout *middlePanelLayout;
     QLabel *filesTitle;
 
@@ -79,6 +88,9 @@ private:
 
     // Condition variable for token refresh loop
     std::condition_variable tokenRefreshCV;
+
+    // Hols all uploaded files widgets
+    std::vector<UploadedFilePanel*> uploadedFilePanels;
 
 };
 

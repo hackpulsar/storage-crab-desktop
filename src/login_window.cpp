@@ -1,5 +1,4 @@
-#include "login_window.h"
-
+#include "windows/login_window.h"
 #include "ui_login_window.h"
 
 #include <curlpp/cURLpp.hpp>
@@ -11,7 +10,7 @@
 #include <QThread>
 
 #include "api.h"
-#include "user_dashboard.h"
+#include "windows/user_dashboard.h"
 #include "utils/styles_loader.hpp"
 
 LoginWindow::LoginWindow(QWidget *parent)
