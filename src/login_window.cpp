@@ -191,7 +191,7 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
         // Proceed to player's personal shelter
         auto *shelter = new UserDashboard(
             API::TokenPair(response_json.at("access_token"), response_json.at("refresh_token")),
-            "chuj"
+            "unknown"
         );
         shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
         shelter->show();

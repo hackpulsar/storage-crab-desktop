@@ -48,6 +48,16 @@ UserDashboard::UserDashboard(
     topPanelLayout->addStretch();
     topPanelLayout->addWidget(usernameLabel);
 
+    // Middle panel
+    middlePanelLayout = new QVBoxLayout;
+
+    filesTitle = new QLabel(centralWidget);
+    filesTitle->setText("Files");
+    filesTitle->setStyleSheet("font-size: 24pt");
+
+    middlePanelLayout->addWidget(filesTitle);
+    middlePanelLayout->addStretch();
+
     // Bottom panel
     bottomPanelLayout = new QHBoxLayout;
 
@@ -60,6 +70,7 @@ UserDashboard::UserDashboard(
 
     layout = new QVBoxLayout(centralWidget);
     layout->addLayout(topPanelLayout);
+    layout->addLayout(middlePanelLayout);
     layout->addStretch();
     layout->addLayout(bottomPanelLayout);
 

@@ -59,6 +59,10 @@ private:
     QLabel *titleLabel;
     QLabel *usernameLabel;
 
+    // Middle panel
+    QVBoxLayout *middlePanelLayout;
+    QLabel *filesTitle;
+
     // Bottom panel
     QHBoxLayout *bottomPanelLayout;
     QPushButton *uploadButton;
