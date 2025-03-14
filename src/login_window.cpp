@@ -12,9 +12,13 @@
 
 #include "api.h"
 #include "user_dashboard.h"
+#include "utils/styles_loader.hpp"
 
-LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+LoginWindow::LoginWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow)
+{
     ui->setupUi(this);
+    this->setWindowTitle("🦀 Login");
 
     // Creating central widget
     centralWidget = new QWidget(this);
@@ -34,29 +38,31 @@ LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::Main
 
     // Error label
     errorLabel = new QLabel(centralWidget);
-    errorLabel->setStyleSheet("font-size: 12pt; color: red;");
+    errorLabel->setStyleSheet("font-size: 14pt; color: red;");
     errorLabel->setAlignment(Qt::AlignCenter);
 
     // Login text field
     emailLineEdit = new QLineEdit(centralWidget);
-    emailLineEdit->setMaximumWidth(150);
+    emailLineEdit->setMinimumWidth(200);
     emailLineEdit->setPlaceholderText("Email");
     emailLineEdit->setAlignment(Qt::AlignCenter);
+    emailLineEdit->setStyleSheet("font-size: 16pt;");
 
     // Password text field
     passwordLineEdit = new QLineEdit(centralWidget);
     passwordLineEdit->setEchoMode(QLineEdit::Password);
-    passwordLineEdit->setMaximumWidth(150);
+    passwordLineEdit->setMinimumWidth(200);
     passwordLineEdit->setPlaceholderText("Password");
     passwordLineEdit->setAlignment(Qt::AlignCenter);
+    passwordLineEdit->setStyleSheet("font-size: 16pt;");
 
     // Login button
     loadingAnimation = new QMovie(this);
-    loadingAnimation->setFileName("./assets/loading.gif");
+    loadingAnimation->setFileName("../assets/loading.gif");
     loginButton = new QPushButton(centralWidget);
     loginButton->setText("Login");
     loginButton->setIconSize(QSize(30, 30));
-    loginButton->setStyleSheet("font-size: 18pt;");
+    loginButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("basic_button.css"));
 
     // Register link
     // TODO: redirect to registration form
@@ -76,6 +82,7 @@ LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::Main
     layout->addWidget(errorLabel, 0, Qt::AlignHCenter);
     layout->addWidget(emailLineEdit, 0, Qt::AlignHCenter);
     layout->addWidget(passwordLineEdit, 0, Qt::AlignHCenter);
+    layout->addStretch();
     layout->addWidget(loginButton, 0, Qt::AlignHCenter);
     layout->addStretch();
     layout->addWidget(registrationLink);
@@ -84,7 +91,10 @@ LoginWindow::LoginWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::Main
     connect(loginButton, &QPushButton::clicked, this, &LoginWindow::onLoginButtonClicked);
 
     // Connecting login response receive signal to a handler
-    connect(this, &LoginWindow::loginResponseReceived, this, &LoginWindow::handleLoginResponse);
+    connect(
+        this, &LoginWindow::loginResponseReceived,
+        this, &LoginWindow::handleLoginResponse
+    );
 
     // Connect login error to handler
     connect(
@@ -172,14 +182,17 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
 
     } else {
         // Login successful
-        qDebug() << "LOGIN_SUCCESSFUL";
-        // TODO: open user dashboard
 
         cURLpp::terminate(); // Cleanup cURLpp
         this->close(); // Close current window
 
+        // TODO: retrieve username
+
         // Proceed to player's personal shelter
-        auto *shelter = new UserDashboard;
+        auto *shelter = new UserDashboard(
+            API::TokenPair(response_json.at("access_token"), response_json.at("refresh_token")),
+            "chuj"
+        );
         shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
         shelter->show();
     }

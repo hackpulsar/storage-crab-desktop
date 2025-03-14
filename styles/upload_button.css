@@ -1,0 +1,14 @@
+QPushButton {
+    color: white;
+    font-size: 24pt;
+    background-color: #62BE63;
+    border: 0;
+    min-width: 150px;
+    min-height: 40px;
+}
+QPushButton:hover {
+    background-color: #58A759;
+}
+QPushButton:pressed {
+    background-color: #4C8F4D;
+}
