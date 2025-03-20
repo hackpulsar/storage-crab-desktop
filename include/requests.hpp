@@ -4,6 +4,8 @@
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 
+#include "token_pair.h"
+
 namespace API::Requests {
 
 inline RequestResult POST(
@@ -12,7 +14,6 @@ inline RequestResult POST(
     const std::string& access_token = ""
 ) {
     try {
-        // Form a token refresh request
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
 
@@ -32,6 +33,54 @@ inline RequestResult POST(
         request.setOpt(cURLpp::options::WriteStream(&responseStream));
 
         // Performing the request
+        request.perform();
+
+        // Parsing the response
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+
+        // Fail
+        if (response.contains("details"))
+            return RequestResult::error(response);
+        return RequestResult::success(response);
+    } catch (cURLpp::RuntimeError&) {
+        return RequestResult::error("Runtime error");
+    } catch (cURLpp::LogicError&) {
+        return RequestResult::error("Logic error");
+    }
+}
+
+// POST overload for sending files
+inline RequestResult POST(
+    const std::string& url,
+    const nlohmann::json &metadata,         // Metadata for a file
+    const std::string& filepath,            // Path to a file
+    const std::string& access_token = ""
+) {
+    try {
+        cURLpp::Easy request;
+        request.setOpt(cURLpp::options::Url(url));
+
+        // String stream for retrieving
+        std::ostringstream responseStream;
+        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+
+        // Forming header
+        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: multipart/form-data"}));
+        // Add authorization field if access token is provided
+        if (!access_token.empty())
+            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+
+        // Forming request
+        cURLpp::Forms formParts;
+        formParts.push_back(new cURLpp::FormParts::Content(
+            "json", metadata.dump(),
+            "application/json"
+        ));
+        formParts.push_back(new cURLpp::FormParts::File("file", filepath));
+
+        request.setOpt(cURLpp::options::HttpPost(formParts));
+
+        // Performing a request
         request.perform();
 
         // Parsing the response

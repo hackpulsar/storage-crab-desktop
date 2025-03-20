@@ -23,6 +23,8 @@ public:
     ~UploadedFilePanel() override;
 
 private:
+    void resizeEvent(QResizeEvent *event) override;
+
     Ui::UploadedFilePanel *ui;
 
     QHBoxLayout *layout;
@@ -36,6 +38,9 @@ private:
     QLabel *sizeLabel;
     QPushButton *downloadButton;
     QPushButton *deleteButton;
+
+    // Full path
+    std::string fullPath;
 
 };
 

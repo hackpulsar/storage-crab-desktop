@@ -34,12 +34,21 @@ private slots:
     // Logs user out.
     void onLogoutButtonClicked();
 
+    // Handles file upload.
+    // Opens file dialog, then upload settings window.
+    void onUploadButtonClicked();
+
     // Handles failure.
     // Shows message box and logs user out.
     void onFailure(const std::string& message);
 
+    // Handles file upload response.
+    void onUploadResponse(const API::RequestResult &result);
+
 signals:
     void failure(const std::string& message);
+
+    void uploadResponse(const API::RequestResult &result);
 
 private:
     // Logs user out
@@ -52,7 +61,7 @@ private:
     void closeEvent(QCloseEvent *event) override;
 
     // Retrieves files related to current user from remote storage
-    API::RequestResult retrieveFiles() const;
+    void tryRetrieveFiles();
 
     Ui::UserDashboard *ui;
     QWidget *centralWidget;

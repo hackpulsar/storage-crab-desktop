@@ -9,7 +9,9 @@ UploadedFilePanel::UploadedFilePanel(
     const std::string& size,
     QWidget *parent
 )
-    : QWidget(parent), ui(new Ui::UploadedFilePanel)
+    : QWidget(parent)
+    , ui(new Ui::UploadedFilePanel)
+    , fullPath(path)
 {
     ui->setupUi(this);
 
@@ -25,7 +27,6 @@ UploadedFilePanel::UploadedFilePanel(
 
     // Main layout
     layout = new QHBoxLayout;
-
     this->setLayout(layout);
 
     // Left side
@@ -37,8 +38,8 @@ UploadedFilePanel::UploadedFilePanel(
 
     pathLabel = new QLabel(this);
     pathLabel->setStyleSheet("font-size: 14pt");
-    // Set text with no elide to update label width
-    pathLabel->setText(QString::fromStdString(path));
+    pathLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    pathLabel->setWordWrap(true);
 
     leftLayout->addWidget(filenameLabel);
     leftLayout->addWidget(pathLabel);
@@ -56,23 +57,23 @@ UploadedFilePanel::UploadedFilePanel(
     deleteButton->setText("Delete");
     deleteButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("delete_button.css"));
 
-    layout->addLayout(leftLayout);
-    layout->addStretch();
+    layout->addLayout(leftLayout, 1);
     layout->addWidget(sizeLabel);
     layout->addWidget(downloadButton);
     layout->addWidget(deleteButton);
-
-    // Update path label text with elide.
-    // Done after setting layouts because that is when label size get updated.
-    pathLabel->setText(
-        QFontMetrics(font()).elidedText(
-            pathLabel->text(),
-            Qt::ElideRight,
-            325
-        )
-    );
 }
 
 UploadedFilePanel::~UploadedFilePanel() {
     delete ui;
+}
+
+void UploadedFilePanel::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+    pathLabel->setText(
+        QFontMetrics(pathLabel->font()).elidedText(
+            QString::fromStdString(fullPath),
+            Qt::ElideMiddle,
+            pathLabel->width()
+        )
+    );
 }

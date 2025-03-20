@@ -6,47 +6,49 @@
 #include <nlohmann/json.hpp>
 
 namespace API {
-    // Provides a way to summarise a request result.
-    struct RequestResult {
-        bool ok;
-        nlohmann::json response;
 
-        static RequestResult success(const nlohmann::json& body) { return RequestResult{true, body}; }
-        static RequestResult error(const nlohmann::json& body) { return RequestResult{false, body}; }
-    };
+// Provides a way to summarise a request result.
+struct RequestResult {
+    bool ok;
+    nlohmann::json response;
 
-    // Represents an Access/Refresh token pair.
-    // Used for communication with the API.
-    class TokenPair final {
-    public:
-        TokenPair() = default;
-        TokenPair(const std::string& access, const std::string& refresh);
+    static RequestResult success(const nlohmann::json &body) { return RequestResult{true, body}; }
+    static RequestResult error(const nlohmann::json &body) { return RequestResult{false, body}; }
+};
 
-        ~TokenPair() = default;
+// Represents an Access/Refresh token pair.
+// Used for communication with the API.
+class TokenPair final {
+public:
+    TokenPair() = default;
 
-        // Returns access token
-        [[nodiscard]] std::string getAccess() const;
+    TokenPair(std::string access, std::string refresh);
 
-        // Sets access token
-        void setAccess(const std::string& access);
+    ~TokenPair() = default;
 
-        // Returns refresh token
-        [[nodiscard]] std::string getRefresh() const;
+    // Returns access token
+    [[nodiscard]] std::string getAccess() const;
 
-        // Sets refresh token
-        void setRefresh(const std::string& refresh);
+    // Sets access token
+    void setAccess(const std::string &access);
 
-        // Sends a refresh POST request.
-        RequestResult refresh();
+    // Returns refresh token
+    [[nodiscard]] std::string getRefresh() const;
 
-    private:
-        // The tokens
-        std::string accessToken;
-        std::string refreshToken;
+    // Sets refresh token
+    void setRefresh(const std::string &refresh);
 
-        // Mutex to protect the token
-        mutable std::mutex mutex;
-    };
+    // Sends a refresh POST request.
+    RequestResult refresh();
+
+private:
+    // The tokens
+    std::string accessToken;
+    std::string refreshToken;
+
+    // Mutex to protect the token
+    mutable std::mutex mutex;
+};
 
 } // API
 

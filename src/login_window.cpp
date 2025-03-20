@@ -10,6 +10,7 @@
 #include <QThread>
 
 #include "api.h"
+#include "requests.hpp"
 #include "windows/user_dashboard.h"
 #include "utils/styles_loader.hpp"
 
@@ -46,6 +47,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     emailLineEdit->setPlaceholderText("Email");
     emailLineEdit->setAlignment(Qt::AlignCenter);
     emailLineEdit->setStyleSheet("font-size: 16pt;");
+    emailLineEdit->setText("admin@admin.com");
 
     // Password text field
     passwordLineEdit = new QLineEdit(centralWidget);
@@ -54,6 +56,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     passwordLineEdit->setPlaceholderText("Password");
     passwordLineEdit->setAlignment(Qt::AlignCenter);
     passwordLineEdit->setStyleSheet("font-size: 16pt;");
+    passwordLineEdit->setText("admin");
 
     // Login button
     loadingAnimation = new QMovie(this);
@@ -127,46 +130,22 @@ void LoginWindow::onLoginButtonClicked() {
     });
     loadingAnimation->start();
 
-    QThread* httpRequestThread = QThread::create([this] {
-        try {
-            // Form a token obtain request
-            cURLpp::Easy login_request;
-            login_request.setOpt(cURLpp::options::Url(API::TOKEN_OBTAIN_URL));
-
-            // Token obtain POST request body
-            const nlohmann::json body = {
+    QThread* loginRequestThread = QThread::create([this] {
+        API::RequestResult result = API::Requests::POST(
+            API::TOKEN_OBTAIN_URL,
+    {
                 {"email", emailLineEdit->text().toStdString()},
                 {"password_hash", passwordLineEdit->text().toStdString()},
-            };
+            }
+        );
 
-            std::ostringstream responseStream;
-
-            // Informing that we are using JSON
-            login_request.setOpt(cURLpp::options::HttpHeader({"Content-Type: application/json"}));
-            // Adding the body and its size to request
-            login_request.setOpt(curlpp::options::PostFields(body.dump()));
-            login_request.setOpt(curlpp::options::PostFieldSize(static_cast<long>(body.dump().length())));
-            login_request.setOpt(cURLpp::options::WriteStream(&responseStream));
-
-            // Add timeout
-            login_request.setOpt(cURLpp::options::Timeout(10));
-            login_request.setOpt(cURLpp::options::ConnectTimeout(5));
-
-            // Performing the request
-            login_request.perform();
-
-            // Emitting a signal indicating that the response has been received
-            emit loginResponseReceived(responseStream.str());
-        } catch (cURLpp::RuntimeError &e) {
-            emit loginError("Runtime error", e.what());
-        } catch (cURLpp::LogicError &e) {
-            emit loginError("Logic error", e.what());
-        }
+        // Emitting a signal indicating that the response has been received
+        emit loginResponseReceived(result.response.dump());
     });
 
     // When the thread is finished, it is going to get deleted safely
-    connect(httpRequestThread, &QThread::finished, httpRequestThread, &QThread::deleteLater);
-    httpRequestThread->start();
+    connect(loginRequestThread, &QThread::finished, loginRequestThread, &QThread::deleteLater);
+    loginRequestThread->start();
 }
 
 void LoginWindow::handleLoginResponse(const std::string &response) {

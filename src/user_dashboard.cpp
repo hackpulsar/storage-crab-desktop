@@ -2,12 +2,14 @@
 #include "ui_user_dashboard.h"
 
 #include <QMessageBox>
-#include <requests.hpp>
+#include <QFileDialog>
+#include <QThread>
 
 #include "api.h"
 #include "utils/styles_loader.hpp"
 #include "windows/login_window.h"
 #include "widgets/uploaded_file_panel.h"
+#include "requests.hpp"
 
 UserDashboard::UserDashboard(
     const API::TokenPair& tokenPair,
@@ -62,27 +64,8 @@ UserDashboard::UserDashboard(
     scrollArea = new QScrollArea;
     scrollArea->setWidgetResizable(true);
 
-    // DEBUG add test file panels
-
-    auto result = this->retrieveFiles();
-    if (result.ok) {
-        for (const auto& file_data : result.response) {
-            uploadedFilePanels.push_back(new UploadedFilePanel(
-                file_data.at("filename"),
-                file_data.at("path"),
-                std::to_string(file_data.at("size").get<float>() / (1000.f * 1000.f)) + "mb",
-                scrollArea
-            ));
-            middlePanelLayout->addWidget(uploadedFilePanels.back());
-        }
-    } else {
-        QMessageBox::critical(
-            this,
-            "Error",
-            "Couldn't retrieve files.",
-            QMessageBox::Ok
-        );
-    }
+    // Try load the files
+    this->tryRetrieveFiles();
 
     middlePanelLayout->addStretch();
 
@@ -105,8 +88,23 @@ UserDashboard::UserDashboard(
     layout->addWidget(scrollArea);
     layout->addLayout(bottomPanelLayout);
 
-    connect(logoutButton, &QPushButton::clicked, this, &UserDashboard::onLogoutButtonClicked);
-    connect(this, &UserDashboard::failure, this, &UserDashboard::onFailure);
+    connect(
+        logoutButton, &QPushButton::clicked,
+        this, &UserDashboard::onLogoutButtonClicked
+    );
+    connect(
+        uploadButton, &QPushButton::clicked,
+        this, &UserDashboard::onUploadButtonClicked
+    );
+
+    connect(
+        this, &UserDashboard::failure,
+        this, &UserDashboard::onFailure
+    );
+    connect(
+        this, &UserDashboard::uploadResponse,
+        this, &UserDashboard::onUploadResponse
+    );
 }
 
 UserDashboard::~UserDashboard() {
@@ -132,6 +130,35 @@ void UserDashboard::onLogoutButtonClicked() {
     }
 }
 
+void UserDashboard::onUploadButtonClicked() {
+    // Reading file path
+    const std::string filepath = QFileDialog::getOpenFileName(
+        this,
+        "Select file to upload"
+    ).toStdString();
+
+    // Reading file name
+    const std::string filename = filepath.substr(
+        filepath.find_last_of('/') + 1
+    );
+
+    // Sending an upload request in a separate thread
+    QThread* uploadThread = QThread::create([this, filepath, filename] {
+        API::RequestResult result = API::Requests::POST(
+            API::UPLOAD_URL,
+            {{"filename", filename}},
+            filepath,
+            this->tokenPair.getAccess()
+        );
+
+        // Emitting signal of upload response receive
+        emit uploadResponse(result);
+    });
+
+    connect(uploadThread, &QThread::finished, uploadThread, &QThread::deleteLater);
+    uploadThread->start();
+}
+
 void UserDashboard::onFailure(const std::string& message) {
     QMessageBox::critical(
         this,
@@ -139,6 +166,28 @@ void UserDashboard::onFailure(const std::string& message) {
         (std::string("Something went wrong.\nDetails: ") + std::string(message)).c_str()
     );
     this->close();
+}
+
+void UserDashboard::onUploadResponse(const API::RequestResult &result) {
+    if (result.ok) {
+        QMessageBox::information(
+            this,
+            "Success",
+            QString::fromStdString(
+                "Successfully uploaded file to "
+                + result.response.at("path").get<std::string>()
+            )
+        );
+
+        // Try reload files
+        this->tryRetrieveFiles();
+    } else {
+        QMessageBox::critical(
+            this,
+            "Error",
+            QString::fromStdString(result.response.at("details").get<std::string>())
+        );
+    }
 }
 
 void UserDashboard::logout() {
@@ -183,6 +232,35 @@ void UserDashboard::closeEvent(QCloseEvent *event) {
     QWidget::closeEvent(event);
 }
 
-API::RequestResult UserDashboard::retrieveFiles() const {
-    return API::Requests::GET(API::GET_FILES_URL, this->tokenPair.getAccess());
+void UserDashboard::tryRetrieveFiles() {
+    API::RequestResult result = API::Requests::GET(
+        API::GET_FILES_URL,
+        this->tokenPair.getAccess()
+    );
+
+    // Removing all the previously loaded files
+    for (auto* panel : uploadedFilePanels) {
+        middlePanelLayout->removeWidget(panel);
+        delete panel;
+    }
+    uploadedFilePanels.clear();
+
+    if (result.ok) {
+        for (const auto& file_data : result.response) {
+            uploadedFilePanels.push_back(new UploadedFilePanel(
+                file_data.at("filename"),
+                file_data.at("path"),
+                std::to_string(file_data.at("size").get<float>() / (1000.f * 1000.f)) + "mb",
+                scrollArea
+            ));
+            middlePanelLayout->insertWidget(middlePanelLayout->count() - 1, uploadedFilePanels.back());
+        }
+    } else {
+        QMessageBox::critical(
+            this,
+            "Error",
+            "Couldn't retrieve files.",
+            QMessageBox::Ok
+        );
+    }
 }

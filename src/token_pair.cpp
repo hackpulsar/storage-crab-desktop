@@ -2,7 +2,6 @@
 
 #include <sstream>
 #include <curlpp/Options.hpp>
-#include <curlpp/Easy.hpp>
 #include <nlohmann/json.hpp>
 
 #include "api.h"
@@ -10,9 +9,10 @@
 
 namespace API {
 
-TokenPair::TokenPair(const std::string &access, const std::string &refresh)
-    : accessToken(access), refreshToken(refresh) {
-}
+TokenPair::TokenPair(std::string access, std::string refresh)
+    : accessToken(std::move(access))
+    , refreshToken(std::move(refresh))
+{ }
 
 RequestResult TokenPair::refresh() {
     RequestResult result = Requests::POST(
