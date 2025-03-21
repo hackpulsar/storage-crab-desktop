@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <author/>
+    <comment/>
+    <exportmacro/>
+    <class>UploadedFilePanel</class>
+    <widget class="QWidget" name="UploadedFilePanel">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>800</width>
+                <height>75</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>UploadedFilePanel</string>
+        </property>
+    </widget>
+    <pixmapfunction/>
+    <connections/>
+</ui>

@@ -1,0 +1,186 @@
+#ifndef REQUESTS_HPP
+#define REQUESTS_HPP
+
+#include <curlpp/Easy.hpp>
+#include <curlpp/Options.hpp>
+#include <curlpp/Infos.hpp>
+#include <qdebug.h>
+#include <fstream>
+
+#include "token_pair.h"
+
+namespace API::Requests {
+
+inline RequestResult POST(
+    const std::string& url,
+    const nlohmann::json &body,
+    const std::string& access_token = ""
+) {
+    try {
+        cURLpp::Easy request;
+        request.setOpt(cURLpp::options::Url(url));
+
+        // String stream for retrieving
+        std::ostringstream responseStream;
+
+        // Informing that we are using JSON
+        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: application/json"}));
+
+        // Add authorization field if access token is provided
+        if (!access_token.empty())
+            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+
+        // Adding the body and its size to request
+        request.setOpt(curlpp::options::PostFields(body.dump()));
+        request.setOpt(curlpp::options::PostFieldSize(static_cast<long>(body.dump().length())));
+        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+
+        // Performing the request
+        request.perform();
+
+        // Parse response if present. No content code
+        if (cURLpp::infos::ResponseCode::get(request) == 204)
+            return RequestResult::success();
+
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+        // Handle failure
+        if (response.contains("details"))
+            return RequestResult::error(response);
+
+        return RequestResult::success(response);
+    } catch (cURLpp::RuntimeError&) {
+        return RequestResult::error("Runtime error");
+    } catch (cURLpp::LogicError&) {
+        return RequestResult::error("Logic error");
+    }
+}
+
+// POST overload for sending files
+inline RequestResult POST_UPLOAD(
+    const std::string& url,
+    const nlohmann::json &metadata,         // Metadata for a file
+    const std::string& filepath,            // Path to a file
+    const std::string& access_token = ""
+) {
+    try {
+        cURLpp::Easy request;
+        request.setOpt(cURLpp::options::Url(url));
+
+        // String stream for retrieving
+        std::ostringstream responseStream;
+        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+
+        // Forming header
+        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: multipart/form-data"}));
+        // Add authorization field if access token is provided
+        if (!access_token.empty())
+            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+
+        // Forming request
+        cURLpp::Forms formParts;
+        formParts.push_back(new cURLpp::FormParts::Content(
+            "json", metadata.dump(),
+            "application/json"
+        ));
+        formParts.push_back(new cURLpp::FormParts::File("file", filepath));
+
+        request.setOpt(cURLpp::options::HttpPost(formParts));
+
+        // Performing a request
+        request.perform();
+
+        // Parsing the response
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+
+        // Fail
+        if (response.contains("details"))
+            return RequestResult::error(response);
+        return RequestResult::success(response);
+    } catch (cURLpp::RuntimeError&) {
+        return RequestResult::error("Runtime error");
+    } catch (cURLpp::LogicError&) {
+        return RequestResult::error("Logic error");
+    }
+}
+
+inline RequestResult GET_DOWNLOAD(
+    const std::string &url,
+    const std::string &filepath,
+    const std::string &access_token = ""
+) {
+    try {
+        cURLpp::Easy request;
+        request.setOpt(cURLpp::options::Url(url));
+
+        std::ostringstream responseStream;
+
+        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+
+        // Add authorization field if access token is provided
+        if (!access_token.empty())
+            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+
+        // Performing the request
+        request.perform();
+
+        // Write the file if OK
+        if (cURLpp::infos::ResponseCode::get(request) == 200) {
+            // Open the file for writing
+            std::ofstream file(filepath, std::ios::binary);
+            if (!file) throw std::runtime_error("Failed to open output file.");
+
+            file << responseStream.str();
+            file.close();
+
+            return RequestResult::success();
+        }
+
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+        return RequestResult::error(response);
+    } catch (cURLpp::RuntimeError&) {
+        return RequestResult::error("Runtime error");
+    } catch (cURLpp::LogicError&) {
+        return RequestResult::error("Logic error");
+    }
+}
+
+inline RequestResult GET(
+    const std::string& url,
+    const std::string& access_token = ""
+) {
+    try {
+        cURLpp::Easy request;
+        request.setOpt(cURLpp::options::Url(url));
+
+        // String stream for retrieving
+        std::ostringstream responseStream;
+
+        // Informing that we are using JSON
+        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: application/json"}));
+
+        // Add authorization field if access token is provided
+        if (!access_token.empty())
+            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+
+        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+
+        // Performing the request
+        request.perform();
+
+        // Parsing the response
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+
+        // Fail
+        if (response.contains("details"))
+            return RequestResult::error(response);
+        return RequestResult::success(response);
+    } catch (cURLpp::RuntimeError&) {
+        return RequestResult::error("Runtime error");
+    } catch (cURLpp::LogicError&) {
+        return RequestResult::error("Logic error");
+    }
+}
+
+}
+
+#endif //REQUESTS_HPP

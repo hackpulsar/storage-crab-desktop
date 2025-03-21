@@ -6,9 +6,13 @@
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
+#include <QScrollArea>
+
 #include <thread>
+#include <nlohmann/json_fwd.hpp>
 
 #include "token_pair.h"
+#include "widgets/uploaded_file_panel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,12 +34,30 @@ private slots:
     // Logs user out.
     void onLogoutButtonClicked();
 
+    // Handles file upload.
+    // Opens file dialog, then upload settings window.
+    void onUploadButtonClicked();
+
     // Handles failure.
     // Shows message box and logs user out.
     void onFailure(const std::string& message);
 
+    // Handles server response.
+    void onResponse(
+        const API::RequestResult &result,
+        const std::string &success_msg
+    );
+
+    // Downloads selected file
+    void onFileDownload(const FileData &fileData);
+
+    // Deletes selected file
+    void onFileDelete(size_t fileID);
+
 signals:
     void failure(const std::string& message);
+
+    void response(const API::RequestResult &result, const std::string &success_msg);
 
 private:
     // Logs user out
@@ -46,6 +68,9 @@ private:
 
     // Overrides base window close event
     void closeEvent(QCloseEvent *event) override;
+
+    // Retrieves files related to current user from remote storage
+    void tryRetrieveFiles();
 
     Ui::UserDashboard *ui;
     QWidget *centralWidget;
@@ -60,6 +85,8 @@ private:
     QLabel *usernameLabel;
 
     // Middle panel
+    QScrollArea *scrollArea;
+    QWidget *middlePanelBaseWidget;
     QVBoxLayout *middlePanelLayout;
     QLabel *filesTitle;
 
@@ -79,6 +106,9 @@ private:
 
     // Condition variable for token refresh loop
     std::condition_variable tokenRefreshCV;
+
+    // Hols all uploaded files widgets
+    std::vector<UploadedFilePanel*> uploadedFilePanels;
 
 };
 
