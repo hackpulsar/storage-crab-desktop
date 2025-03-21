@@ -2,16 +2,15 @@
 #include "ui_uploaded_file_panel.h"
 
 #include "utils/styles_loader.hpp"
+#include "file_data.hpp"
 
 UploadedFilePanel::UploadedFilePanel(
-    const std::string& fileName,
-    const std::string& path,
-    const std::string& size,
+    const FileData &fileData,
     QWidget *parent
 )
     : QWidget(parent)
     , ui(new Ui::UploadedFilePanel)
-    , fullPath(path)
+    , fileData(fileData)
 {
     ui->setupUi(this);
 
@@ -33,7 +32,7 @@ UploadedFilePanel::UploadedFilePanel(
     leftLayout = new QVBoxLayout;
 
     filenameLabel = new QLabel(this);
-    filenameLabel->setText(QString::fromStdString(fileName));
+    filenameLabel->setText(QString::fromStdString(fileData.name));
     filenameLabel->setStyleSheet("font-size: 20pt");
 
     pathLabel = new QLabel(this);
@@ -46,7 +45,9 @@ UploadedFilePanel::UploadedFilePanel(
 
     // Right size
     sizeLabel = new QLabel(this);
-    sizeLabel->setText(QString::fromStdString(size));
+    sizeLabel->setText(QString::fromStdString(
+        std::to_string(fileData.size / (1000.f * 1000.f)) + "mb"
+    ));
     sizeLabel->setStyleSheet("font-size: 16pt");
 
     downloadButton = new QPushButton(this);
@@ -61,6 +62,16 @@ UploadedFilePanel::UploadedFilePanel(
     layout->addWidget(sizeLabel);
     layout->addWidget(downloadButton);
     layout->addWidget(deleteButton);
+
+    connect(
+        this->downloadButton, &QPushButton::clicked,
+        this, [this] { emit downloadButtonPressed(this->fileData); }
+    );
+
+    connect(
+        this->deleteButton, &QPushButton::clicked,
+        this, [this] { emit deleteButtonPressed(this->fileData.id); }
+    );
 }
 
 UploadedFilePanel::~UploadedFilePanel() {
@@ -71,7 +82,7 @@ void UploadedFilePanel::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
     pathLabel->setText(
         QFontMetrics(pathLabel->font()).elidedText(
-            QString::fromStdString(fullPath),
+            QString::fromStdString(this->fileData.path),
             Qt::ElideMiddle,
             pathLabel->width()
         )

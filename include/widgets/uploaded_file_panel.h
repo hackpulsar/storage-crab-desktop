@@ -6,6 +6,8 @@
 #include <QLabel>
 #include <QPushButton>
 
+#include "file_data.hpp"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class UploadedFilePanel; }
 QT_END_NAMESPACE
@@ -15,12 +17,14 @@ Q_OBJECT
 
 public:
     explicit UploadedFilePanel(
-        const std::string& fileName,
-        const std::string& path,
-        const std::string& size,
+        const FileData &fileData,
         QWidget *parent = nullptr
     );
     ~UploadedFilePanel() override;
+
+signals:
+    void downloadButtonPressed(const FileData &fileData);
+    void deleteButtonPressed(size_t file_id);
 
 private:
     void resizeEvent(QResizeEvent *event) override;
@@ -39,8 +43,7 @@ private:
     QPushButton *downloadButton;
     QPushButton *deleteButton;
 
-    // Full path
-    std::string fullPath;
+    FileData fileData;
 
 };
 

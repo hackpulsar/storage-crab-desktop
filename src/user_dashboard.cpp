@@ -10,6 +10,7 @@
 #include "windows/login_window.h"
 #include "widgets/uploaded_file_panel.h"
 #include "requests.hpp"
+#include "utils/downloads_folder.hpp"
 
 UserDashboard::UserDashboard(
     const API::TokenPair& tokenPair,
@@ -102,8 +103,8 @@ UserDashboard::UserDashboard(
         this, &UserDashboard::onFailure
     );
     connect(
-        this, &UserDashboard::uploadResponse,
-        this, &UserDashboard::onUploadResponse
+        this, &UserDashboard::response,
+        this, &UserDashboard::onResponse
     );
 }
 
@@ -144,7 +145,7 @@ void UserDashboard::onUploadButtonClicked() {
 
     // Sending an upload request in a separate thread
     QThread* uploadThread = QThread::create([this, filepath, filename] {
-        API::RequestResult result = API::Requests::POST(
+        API::RequestResult result = API::Requests::POST_UPLOAD(
             API::UPLOAD_URL,
             {{"filename", filename}},
             filepath,
@@ -152,7 +153,7 @@ void UserDashboard::onUploadButtonClicked() {
         );
 
         // Emitting signal of upload response receive
-        emit uploadResponse(result);
+        emit response(result, "Upload successful!");
     });
 
     connect(uploadThread, &QThread::finished, uploadThread, &QThread::deleteLater);
@@ -168,15 +169,12 @@ void UserDashboard::onFailure(const std::string& message) {
     this->close();
 }
 
-void UserDashboard::onUploadResponse(const API::RequestResult &result) {
+void UserDashboard::onResponse(const API::RequestResult &result, const std::string &success_msg) {
     if (result.ok) {
         QMessageBox::information(
             this,
             "Success",
-            QString::fromStdString(
-                "Successfully uploaded file to "
-                + result.response.at("path").get<std::string>()
-            )
+            QString::fromStdString(success_msg)
         );
 
         // Try reload files
@@ -188,6 +186,37 @@ void UserDashboard::onUploadResponse(const API::RequestResult &result) {
             QString::fromStdString(result.response.at("details").get<std::string>())
         );
     }
+}
+
+void UserDashboard::onFileDownload(const FileData &fileData) {
+    std::string filepath = Utils::GetDownloadsFolder();
+
+    // Windows uses wierd '\\' instead of chad '/'
+#ifdef _WIN32
+    filepath += "\\";
+#else
+    filepath += "/";
+#endif
+
+    filepath += fileData.name;
+
+    const API::RequestResult result = API::Requests::GET_DOWNLOAD(
+        API::DOWNLOAD_URL_FOR(fileData.id),
+        filepath,
+        this->tokenPair.getAccess()
+    );
+
+    emit response(result, "Download successful!");
+}
+
+void UserDashboard::onFileDelete(const size_t fileID) {
+    const API::RequestResult result = API::Requests::POST(
+        API::DELETE_URL_FOR(fileID),
+        nlohmann::json(),
+        this->tokenPair.getAccess()
+    );
+
+    emit response(result, "Delete successful!");
 }
 
 void UserDashboard::logout() {
@@ -247,12 +276,26 @@ void UserDashboard::tryRetrieveFiles() {
 
     if (result.ok) {
         for (const auto& file_data : result.response) {
-            uploadedFilePanels.push_back(new UploadedFilePanel(
-                file_data.at("filename"),
-                file_data.at("path"),
-                std::to_string(file_data.at("size").get<float>() / (1000.f * 1000.f)) + "mb",
+            auto panel = new UploadedFilePanel(
+                FileData {
+                    file_data.at("filename"),
+                    file_data.at("path"),
+                    file_data.at("size").get<size_t>(),
+                    file_data.at("id").get<size_t>(),
+                },
                 scrollArea
-            ));
+            );
+
+            connect(
+                panel, &UploadedFilePanel::downloadButtonPressed,
+                this, &UserDashboard::onFileDownload
+            );
+            connect(
+                panel, &UploadedFilePanel::deleteButtonPressed,
+                this, &UserDashboard::onFileDelete
+            );
+
+            uploadedFilePanels.push_back(panel);
             middlePanelLayout->insertWidget(middlePanelLayout->count() - 1, uploadedFilePanels.back());
         }
     } else {

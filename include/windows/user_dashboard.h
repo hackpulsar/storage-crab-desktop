@@ -42,13 +42,22 @@ private slots:
     // Shows message box and logs user out.
     void onFailure(const std::string& message);
 
-    // Handles file upload response.
-    void onUploadResponse(const API::RequestResult &result);
+    // Handles server response.
+    void onResponse(
+        const API::RequestResult &result,
+        const std::string &success_msg
+    );
+
+    // Downloads selected file
+    void onFileDownload(const FileData &fileData);
+
+    // Deletes selected file
+    void onFileDelete(size_t fileID);
 
 signals:
     void failure(const std::string& message);
 
-    void uploadResponse(const API::RequestResult &result);
+    void response(const API::RequestResult &result, const std::string &success_msg);
 
 private:
     // Logs user out

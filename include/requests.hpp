@@ -3,6 +3,9 @@
 
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
+#include <curlpp/Infos.hpp>
+#include <qdebug.h>
+#include <fstream>
 
 #include "token_pair.h"
 
@@ -35,12 +38,15 @@ inline RequestResult POST(
         // Performing the request
         request.perform();
 
-        // Parsing the response
-        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+        // Parse response if present. No content code
+        if (cURLpp::infos::ResponseCode::get(request) == 204)
+            return RequestResult::success();
 
-        // Fail
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+        // Handle failure
         if (response.contains("details"))
             return RequestResult::error(response);
+
         return RequestResult::success(response);
     } catch (cURLpp::RuntimeError&) {
         return RequestResult::error("Runtime error");
@@ -50,7 +56,7 @@ inline RequestResult POST(
 }
 
 // POST overload for sending files
-inline RequestResult POST(
+inline RequestResult POST_UPLOAD(
     const std::string& url,
     const nlohmann::json &metadata,         // Metadata for a file
     const std::string& filepath,            // Path to a file
@@ -97,12 +103,52 @@ inline RequestResult POST(
     }
 }
 
+inline RequestResult GET_DOWNLOAD(
+    const std::string &url,
+    const std::string &filepath,
+    const std::string &access_token = ""
+) {
+    try {
+        cURLpp::Easy request;
+        request.setOpt(cURLpp::options::Url(url));
+
+        std::ostringstream responseStream;
+
+        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+
+        // Add authorization field if access token is provided
+        if (!access_token.empty())
+            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+
+        // Performing the request
+        request.perform();
+
+        // Write the file if OK
+        if (cURLpp::infos::ResponseCode::get(request) == 200) {
+            // Open the file for writing
+            std::ofstream file(filepath, std::ios::binary);
+            if (!file) throw std::runtime_error("Failed to open output file.");
+
+            file << responseStream.str();
+            file.close();
+
+            return RequestResult::success();
+        }
+
+        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+        return RequestResult::error(response);
+    } catch (cURLpp::RuntimeError&) {
+        return RequestResult::error("Runtime error");
+    } catch (cURLpp::LogicError&) {
+        return RequestResult::error("Logic error");
+    }
+}
+
 inline RequestResult GET(
     const std::string& url,
     const std::string& access_token = ""
 ) {
     try {
-        // Form a token refresh request
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
 

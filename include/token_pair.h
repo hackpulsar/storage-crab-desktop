@@ -13,6 +13,7 @@ struct RequestResult {
     nlohmann::json response;
 
     static RequestResult success(const nlohmann::json &body) { return RequestResult{true, body}; }
+    static RequestResult success() { return RequestResult{true, nlohmann::json()}; }
     static RequestResult error(const nlohmann::json &body) { return RequestResult{false, body}; }
 };
 
