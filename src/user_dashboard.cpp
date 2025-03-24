@@ -138,6 +138,8 @@ void UserDashboard::onUploadButtonClicked() {
         "Select file to upload"
     ).toStdString();
 
+    if (filepath.empty()) return;
+
     // Reading file name
     const std::string filename = filepath.substr(
         filepath.find_last_of('/') + 1
