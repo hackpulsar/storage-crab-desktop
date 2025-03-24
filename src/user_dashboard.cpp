@@ -7,6 +7,7 @@
 
 #include "api.h"
 #include "utils/styles_loader.hpp"
+#include "windows/upload_dialog.h"
 #include "windows/login_window.h"
 #include "widgets/uploaded_file_panel.h"
 #include "requests.hpp"
@@ -78,7 +79,6 @@ UserDashboard::UserDashboard(
 
     uploadButton = new QPushButton(centralWidget);
     uploadButton->setText("Upload");
-    uploadButton->setStyleSheet("font-size: 24pt");
     uploadButton->setStyleSheet(StylesLoader::loadStyleFromFile("upload_button.css"));
 
     bottomPanelLayout->addWidget(uploadButton);
@@ -132,34 +132,24 @@ void UserDashboard::onLogoutButtonClicked() {
 }
 
 void UserDashboard::onUploadButtonClicked() {
-    // Reading file path
-    const std::string filepath = QFileDialog::getOpenFileName(
-        this,
-        "Select file to upload"
-    ).toStdString();
+    auto *dialog = new UploadDialog(tokenPair.getAccess(), this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::WindowModal);
+    dialog->show();
 
-    if (filepath.empty()) return;
-
-    // Reading file name
-    const std::string filename = filepath.substr(
-        filepath.find_last_of('/') + 1
+    // Reloading the files on dialog close
+    connect(
+        dialog, &UploadDialog::rejected,
+        this, [dialog] { dialog->close(); }
     );
 
-    // Sending an upload request in a separate thread
-    QThread* uploadThread = QThread::create([this, filepath, filename] {
-        API::RequestResult result = API::Requests::POST_UPLOAD(
-            API::UPLOAD_URL,
-            {{"filename", filename}},
-            filepath,
-            this->tokenPair.getAccess()
-        );
-
-        // Emitting signal of upload response receive
-        emit response(result, "Upload successful!");
-    });
-
-    connect(uploadThread, &QThread::finished, uploadThread, &QThread::deleteLater);
-    uploadThread->start();
+    connect(
+        dialog, &UploadDialog::accepted,
+        this, [this, dialog] {
+            dialog->close();
+            this->tryRetrieveFiles();
+        }
+    );
 }
 
 void UserDashboard::onFailure(const std::string& message) {

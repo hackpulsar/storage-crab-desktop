@@ -22,7 +22,7 @@ class UserDashboard final : public QMainWindow {
 Q_OBJECT
 
 public:
-    explicit UserDashboard(
+    UserDashboard(
         const API::TokenPair& tokenPair,
         const std::string& username,
         QWidget *parent = nullptr
