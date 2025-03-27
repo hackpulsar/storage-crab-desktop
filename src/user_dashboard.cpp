@@ -132,7 +132,15 @@ void UserDashboard::onLogoutButtonClicked() {
 }
 
 void UserDashboard::onUploadButtonClicked() {
-    auto *dialog = new UploadDialog(tokenPair.getAccess(), this);
+    // Reading file path
+    const std::string filePath = QFileDialog::getOpenFileName(
+        this,
+        "Select file to upload"
+    ).toStdString();
+
+    if (filePath.empty()) return;
+
+    auto *dialog = new UploadDialog(filePath, tokenPair.getAccess(), this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::WindowModal);
     dialog->show();

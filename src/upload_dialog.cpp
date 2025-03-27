@@ -4,10 +4,8 @@
 
 #include "ui_upload_dialog.h"
 
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QLineEdit>
-#include <QtWidgets/QComboBox>
 #include <QtWidgets/QFileDialog>
+#include <QCheckBox>
 #include <QThread>
 #include <QMovie>
 
@@ -15,13 +13,16 @@
 #include "requests.hpp"
 #include "utils/styles_loader.hpp"
 #include "windows/user_dashboard.h"
+#include "encryption/algorithm_types.h"
 
 UploadDialog::UploadDialog(
+    std::string filePath,
     std::string accessToken,
     QWidget *parent
 )
     : QDialog(parent)
     , ui(new Ui::UploadDialog)
+    , filePath(std::move(filePath))
     , accessToken(std::move(accessToken))
 {
     ui->setupUi(this);
@@ -30,57 +31,75 @@ UploadDialog::UploadDialog(
     inputLayouts.reserve(4);
 
     // File
-    QLabel *fileLabel = new QLabel;
-    fileLabel->setText("File");
-    fileLabel->setStyleSheet("font-size: 20pt");
+    filenameLabel = new QLabel;
+    filenameLabel->setText("File");
+    filenameLabel->setStyleSheet("font-size: 20pt");
 
-    QLineEdit *fileLineEdit = new QLineEdit;
-    fileLineEdit->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
+    filenameLineEdit = new QLineEdit;
+    filenameLineEdit->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
+    filenameLineEdit->setText(QString::fromStdString(this->filePath));
+
+    encryptionCheckBox = new QCheckBox("Encrypt name");
+    encryptionCheckBox->setStyleSheet("font-size: 20pt;");
 
     inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(fileLabel);
-    inputLayouts.back()->addWidget(fileLineEdit);
+    inputLayouts.back()->addWidget(filenameLabel);
+    inputLayouts.back()->addWidget(filenameLineEdit);
+    inputLayouts.back()->addWidget(encryptionCheckBox);
 
     // Encryption
-    QLabel *encryptionLabel = new QLabel;
-    encryptionLabel->setText("Encryption type");
-    encryptionLabel->setStyleSheet("font-size: 20pt");
+    algorithmLabel = new QLabel;
+    algorithmLabel->setText("Encryption type");
+    algorithmLabel->setStyleSheet("font-size: 20pt");
 
-    QComboBox *encryptionBox = new QComboBox;
-    encryptionBox->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
-    encryptionBox->addItem("AES");
-    encryptionBox->addItem("RSA");
-    encryptionBox->addItem("ECC");
+    algorithmComboBox = new QComboBox;
+    algorithmComboBox->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
+    algorithmComboBox->addItem("AES");
+    algorithmComboBox->addItem("RSA");
+    algorithmComboBox->addItem("ECC");
+
+    connect(
+        algorithmComboBox, &QComboBox::currentTextChanged,
+        this, &UploadDialog::switchEncryptionAlgorithm
+    );
 
     inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(encryptionLabel);
-    inputLayouts.back()->addWidget(encryptionBox);
+    inputLayouts.back()->addWidget(algorithmLabel);
+    inputLayouts.back()->addWidget(algorithmComboBox);
 
     // Keys
-    QLabel *publicLabel = new QLabel;
-    publicLabel->setText("Public key");
-    publicLabel->setStyleSheet("font-size: 20pt");
-    QLabel *privateLabel = new QLabel;
-    privateLabel->setText("Private key");
-    privateLabel->setStyleSheet("font-size: 20pt");
+    publicKeyLabel = new QLabel;
+    publicKeyLabel->setText("Public key");
+    publicKeyLabel->setStyleSheet("font-size: 20pt");
 
-    QLineEdit *publicLineEdit = new QLineEdit;
-    publicLineEdit->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
-    QLineEdit *privateLineEdit = new QLineEdit;
-    privateLineEdit->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
+    privateKeyLabel = new QLabel;
+    privateKeyLabel->setText("Private key");
+    privateKeyLabel->setStyleSheet("font-size: 20pt");
+
+    publicKeyLineEdit = new QLineEdit;
+    publicKeyLineEdit->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
+
+    privateKeyLineEdit = new QLineEdit;
+    privateKeyLineEdit->setStyleSheet("font-size: 20pt; min-height: 1.25em;");
+    privateKeyLineEdit->setEnabled(false); // AES is selected by default, so no private key
 
     inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(publicLabel);
-    inputLayouts.back()->addWidget(publicLineEdit);
+    inputLayouts.back()->addWidget(publicKeyLabel);
+    inputLayouts.back()->addWidget(publicKeyLineEdit);
     inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(privateLabel);
-    inputLayouts.back()->addWidget(privateLineEdit);
+    inputLayouts.back()->addWidget(privateKeyLabel);
+    inputLayouts.back()->addWidget(privateKeyLineEdit);
 
     using namespace Utils;
 
     // Adding buttons
+    regenerateButton = new QPushButton(this);
+    regenerateButton->setText("Regenerate");
+    regenerateButton->setStyleSheet(StylesLoader::loadStyleFromFile("basic_button.css"));
+
     uploadButton = new QPushButton(this);
     uploadButton->setText("Encrypt && Upload");
+    uploadButton->setIconSize(QSize(30, 30));
     uploadButton->setStyleSheet(StylesLoader::loadStyleFromFile("upload_button.css"));
 
     cancelButton = new QPushButton(this);
@@ -88,8 +107,9 @@ UploadDialog::UploadDialog(
     cancelButton->setStyleSheet(StylesLoader::loadStyleFromFile("cancel_button.css"));
 
     buttonsLayout = new QHBoxLayout();
-    buttonsLayout->addWidget(uploadButton);
     buttonsLayout->addWidget(cancelButton);
+    buttonsLayout->addWidget(uploadButton);
+    buttonsLayout->addWidget(regenerateButton);
 
     // Assembling main layout
     layout = new QVBoxLayout(this);
@@ -140,6 +160,7 @@ void UploadDialog::onUploadResult(const API::RequestResult &result, const std::s
         // We are done
         emit accepted();
     } else {
+        // Reset upload button
         loadingAnimation->stop();
         uploadButton->setText("Encrypt && Upload");
         uploadButton->setIcon(QIcon());
@@ -152,18 +173,22 @@ void UploadDialog::onUploadResult(const API::RequestResult &result, const std::s
     }
 }
 
+void UploadDialog::switchEncryptionAlgorithm(const QString &newAlgorithm) {
+    const auto algorithmType = Encryption::algorithmTypeFromString(newAlgorithm.toStdString());
+    this->encryptionAlgorithm = algorithmType;
+
+    // AES doesn't use private key
+    if (algorithmType == Encryption::AlgorithmType::AES) {
+        this->privateKeyLineEdit->setEnabled(false);
+    } else {
+        this->privateKeyLineEdit->setEnabled(true);
+    }
+}
+
 void UploadDialog::onUploadButtonClicked() {
-    // Reading file path
-    const std::string filepath = QFileDialog::getOpenFileName(
-    this,
-    "Select file to upload"
-    ).toStdString();
-
-    if (filepath.empty()) return;
-
     // Reading file name
-    const std::string filename = filepath.substr(
-    filepath.find_last_of('/') + 1
+    const std::string filename = filePath.substr(
+        filePath.find_last_of('/') + 1
     );
 
     // Adding loading icon
@@ -176,14 +201,14 @@ void UploadDialog::onUploadButtonClicked() {
     loadingAnimation->start();
 
     // Sending an upload request in a separate thread
-    QThread* uploadThread = QThread::create([this, filepath, filename] {
+    QThread* uploadThread = QThread::create([this, filename] {
         // TODO: do the actual encryption
         emit encryptionResult(true);
 
         API::RequestResult result = API::Requests::POST_UPLOAD(
             API::UPLOAD_URL,
             {{"filename", filename}},
-            filepath,
+            this->filePath,
             this->accessToken
         );
 
