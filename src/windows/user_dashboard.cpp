@@ -1,17 +1,17 @@
-#include "../../include/windows/user_dashboard.h"
-#include "../../cmake-build-debug/storage-crab-desktop_autogen/include/ui_user_dashboard.h"
+#include "windows/user_dashboard.h"
+#include "ui_user_dashboard.h"
 
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QThread>
 
-#include "../../include/api.h"
-#include "../../include/utils/styles_loader.hpp"
-#include "../../include/windows/upload_dialog.h"
-#include "../../include/windows/login_window.h"
-#include "../../include/widgets/uploaded_file_panel.h"
-#include "../../include/requests.hpp"
-#include "../../include/utils/downloads_folder.hpp"
+#include "api.h"
+#include "utils/styles_loader.hpp"
+#include "windows/upload_dialog.h"
+#include "windows/login_window.h"
+#include "widgets/uploaded_file_panel.h"
+#include "requests.hpp"
+#include "utils/downloads_folder.hpp"
 
 UserDashboard::UserDashboard(
     const API::TokenPair& tokenPair,

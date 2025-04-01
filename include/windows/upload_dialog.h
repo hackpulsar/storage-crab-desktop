@@ -91,7 +91,7 @@ private:
     Cryptography::AlgorithmType encryptionAlgorithm;
 
     QLabel *encryptNameLabel;
-    QCheckBox *encryptNameCheckBx;
+    QCheckBox *encryptNameCheckBox;
 
     // Input text fields layouts
     std::vector<QHBoxLayout*> inputLayouts;

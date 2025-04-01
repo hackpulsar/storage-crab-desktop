@@ -14,7 +14,6 @@
 #include "utils/styles_loader.hpp"
 #include "windows/user_dashboard.h"
 #include "cryptography/algorithm_types.h"
-#include "file_metadata.hpp"
 #include "cryptography/aes.h"
 
 UploadDialog::UploadDialog(
@@ -97,13 +96,13 @@ UploadDialog::UploadDialog(
     encryptNameLabel->setText("Encrypt name");
     encryptNameLabel->setStyleSheet("font-size: 20pt");
 
-    encryptNameCheckBx = new QCheckBox;
-    encryptNameCheckBx->setStyleSheet("font-size: 20pt;");
+    encryptNameCheckBox = new QCheckBox;
+    encryptNameCheckBox->setStyleSheet("font-size: 20pt;");
 
     inputLayouts.push_back(new QHBoxLayout);
     inputLayouts.back()->addWidget(encryptNameLabel);
     inputLayouts.back()->addStretch();
-    inputLayouts.back()->addWidget(encryptNameCheckBx);
+    inputLayouts.back()->addWidget(encryptNameCheckBox);
 
     using namespace Utils;
 
@@ -211,7 +210,7 @@ void UploadDialog::onUploadButtonClicked() {
     }
 
     // Reading file name
-    const std::string filename = filePath.substr(
+    std::string filename = filePath.substr(
         filePath.find_last_of('/') + 1
     );
 
@@ -225,9 +224,7 @@ void UploadDialog::onUploadButtonClicked() {
     loadingAnimation->start();
 
     // Sending an upload request in a separate thread
-    QThread* uploadThread = QThread::create([this, filename] {
-        // TODO: do the actual encryption
-
+    QThread* uploadThread = QThread::create([this, filename]() mutable {
         std::fstream sourceFile(this->filePath, std::fstream::in | std::fstream::binary);
         if (!sourceFile.is_open()) {
             emit error("Failed to open the source file");
@@ -239,27 +236,47 @@ void UploadDialog::onUploadButtonClicked() {
         content << sourceFile.rdbuf();
         sourceFile.close();
 
-        // Encrypt with freshly generated config
-        auto encrypted = encrypt(
-            Cryptography::AES::generateKey(
-                std::atoi(this->keySizeComboBox->currentText().toStdString().c_str()),
-                IV_SIZE
-            ),
-            content.str()
+        // Generate config
+        auto config = Cryptography::AES::generateKey(
+            std::atoi(this->keySizeComboBox->currentText().toStdString().c_str()),
+            IV_SIZE
         );
 
-        const std::string encryptedFilePath = this->filePath + ".enc";
+        // Encrypt with freshly generated config
+        auto encrypted = Cryptography::AES::encrypt(config, content.str());
+
+        // Extract file extension
+        const std::string fileExtension = filename.substr(filename.find_first_of('.'));
+
+        // Encrypt name if checked
+        if (this->encryptNameCheckBox->isChecked()) {
+            auto encryptedName = Cryptography::AES::encrypt(
+                config,
+                filename.substr(0, filename.find_first_of('.'))
+            );
+
+            // Bytes array as HEX string
+            std::ostringstream oss;
+            for (auto byte : encryptedName)
+                oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
+            filename = oss.str() + fileExtension;
+        }
 
         // Save encrypted file
+#ifdef _WIN32
+        std::string encryptedFilePath = this->filePath.substr(0, filePath.find_last_of("\\") + 1) + filename + ".enc";
+#else
+        std::string encryptedFilePath = this->filePath.substr(0, filePath.find_last_of("/") + 1) + filename + ".enc";
+#endif
+
         std::ofstream encryptedFile(encryptedFilePath, std::ios::binary);
+
         if (!encryptedFile.is_open()) {
             emit error("Failed to write to encrypted file");
             return;
         }
         encryptedFile.write(reinterpret_cast<const std::ostream::char_type*>(encrypted.data()), encrypted.size());
         encryptedFile.close();
-
-        // TODO: encrypt name if checked
 
         API::RequestResult result = API::Requests::POST_UPLOAD(
             API::UPLOAD_URL,

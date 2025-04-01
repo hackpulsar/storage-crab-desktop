@@ -28,16 +28,20 @@ UploadedFilePanel::UploadedFilePanel(
     layout = new QHBoxLayout;
     this->setLayout(layout);
 
+    //this->setMaximumWidth(850);
+
     // Left side
     leftLayout = new QVBoxLayout;
 
     filenameLabel = new QLabel(this);
     filenameLabel->setText(QString::fromStdString(fileData.name));
     filenameLabel->setStyleSheet("font-size: 20pt");
+    filenameLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    filenameLabel->setWordWrap(true);
 
     pathLabel = new QLabel(this);
     pathLabel->setStyleSheet("font-size: 14pt");
-    pathLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    pathLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     pathLabel->setWordWrap(true);
 
     leftLayout->addWidget(filenameLabel);
@@ -80,11 +84,20 @@ UploadedFilePanel::~UploadedFilePanel() {
 
 void UploadedFilePanel::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
+
     pathLabel->setText(
         QFontMetrics(pathLabel->font()).elidedText(
             QString::fromStdString(this->fileData.path),
             Qt::ElideMiddle,
             pathLabel->width()
+        )
+    );
+
+    filenameLabel->setText(
+        QFontMetrics(filenameLabel->font()).elidedText(
+            QString::fromStdString(this->fileData.name),
+            Qt::ElideMiddle,
+            filenameLabel->width()
         )
     );
 }
