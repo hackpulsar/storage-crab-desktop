@@ -3,13 +3,14 @@
 
 #include <QHBoxLayout>
 #include <QMessageBox>
-#include <encryption/algorithm_types.h>
+#include <cryptography/algorithm_types.h>
 #include <QtWidgets/QDialog.h>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QComboBox>
 
 #include "token_pair.h"
+#include "cryptography/aes.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class UploadDialog; }
@@ -36,8 +37,11 @@ public slots:
         const std::string &success_msg
     );
 
-    // Switches encryption algortithm
+    // Switches encryption algorithm
     void switchEncryptionAlgorithm(const QString &newAlgorithm);
+
+    // Handles errors. Shows a message box with error message
+    void onError(const std::string &message);
 
 signals:
     void encryptionResult(bool ok);
@@ -47,9 +51,14 @@ signals:
         const std::string &success_msg
     );
 
+    void error(const std::string &message);
+
 private:
     // Handles file upload
     void onUploadButtonClicked();
+
+    // Resets upload button
+    void resetUploadButton();
 
     Ui::UploadDialog *ui;
 
@@ -62,30 +71,33 @@ private:
     // Main layout
     QVBoxLayout *layout;
 
-    // Filename line
-    QLabel *filenameLabel;
-    QLineEdit *filenameLineEdit;
-    QCheckBox *encryptionCheckBox;
+    // File path
+    QLabel *filePathLabel;
+    QLineEdit *filePathLineEdit;
+
+    // Key path
+    QLabel *keyPathLabel;
+    QLineEdit *keyPathLineEdit;
+
+    // Key size
+    QLabel *keySizeLabel;
+    QComboBox *keySizeComboBox;
 
     // Encryption algorithm
     QLabel *algorithmLabel;
     QComboBox *algorithmComboBox;
 
     // Current selected encryption algorithm
-    Encryption::AlgorithmType encryptionAlgorithm;
+    Cryptography::AlgorithmType encryptionAlgorithm;
 
-    // Keys
-    QLabel *publicKeyLabel;
-    QLineEdit *publicKeyLineEdit;
-    QLabel *privateKeyLabel;
-    QLineEdit *privateKeyLineEdit;
+    QLabel *encryptNameLabel;
+    QCheckBox *encryptNameCheckBx;
 
     // Input text fields layouts
     std::vector<QHBoxLayout*> inputLayouts;
 
     // Bottom buttons layout
     QHBoxLayout *buttonsLayout;
-    QPushButton *regenerateButton;
     QPushButton *uploadButton;
     QPushButton *cancelButton;
 

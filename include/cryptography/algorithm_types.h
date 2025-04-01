@@ -1,7 +1,7 @@
 #ifndef ALGORITHM_TYPES_H
 #define ALGORITHM_TYPES_H
 
-namespace Encryption {
+namespace Cryptography {
 
 enum class AlgorithmType {
     AES = 0,
@@ -10,9 +10,9 @@ enum class AlgorithmType {
 };
 
 inline AlgorithmType algorithmTypeFromString(const std::string &algorithmType) {
-    if (algorithmType == "AES") return AlgorithmType::AES;
     if (algorithmType == "RSA") return AlgorithmType::RSA;
     if (algorithmType == "ECC") return AlgorithmType::ECC;
+    return AlgorithmType::AES; // AES by default
 }
 
 }
