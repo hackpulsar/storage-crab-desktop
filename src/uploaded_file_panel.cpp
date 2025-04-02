@@ -2,6 +2,7 @@
 #include "ui_uploaded_file_panel.h"
 
 #include "utils/styles_loader.hpp"
+#include "utils/dark_mode.hpp"
 #include "file_data.hpp"
 
 UploadedFilePanel::UploadedFilePanel(
@@ -18,7 +19,7 @@ UploadedFilePanel::UploadedFilePanel(
     QPalette pal = palette();
     pal.setColor(
         QPalette::Window,
-        palette().color(QPalette::Window).lightness() < 128 ?
+        Utils::isDarkMode(this) ?
             QColor::fromRgb(40, 40, 40) : QColor::fromRgb(211, 211, 211)
     );
     setAutoFillBackground(true);

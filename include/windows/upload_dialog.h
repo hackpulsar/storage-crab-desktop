@@ -74,10 +74,12 @@ private:
     // File path
     QLabel *filePathLabel;
     QLineEdit *filePathLineEdit;
+    QPushButton *chooseFilePathButton;
 
     // Key path
     QLabel *keyPathLabel;
     QLineEdit *keyPathLineEdit;
+    QPushButton *chooseKeyPathButton;
 
     // Key size
     QLabel *keySizeLabel;

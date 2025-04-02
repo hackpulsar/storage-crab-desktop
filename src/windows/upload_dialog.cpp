@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QThread>
 #include <QMovie>
+#include <utils/dark_mode.hpp>
 
 #include "api.h"
 #include "requests.hpp"
@@ -29,7 +30,7 @@ UploadDialog::UploadDialog(
     ui->setupUi(this);
 
     // Inputs
-    inputLayouts.reserve(4);
+    inputLayouts.reserve(2);
 
     // File path
     filePathLabel = new QLabel;
@@ -40,9 +41,13 @@ UploadDialog::UploadDialog(
     filePathLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
     filePathLineEdit->setText(QString::fromStdString(this->filePath));
 
-    inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(filePathLabel);
-    inputLayouts.back()->addWidget(filePathLineEdit);
+    chooseFilePathButton = new QPushButton;
+    chooseFilePathButton->setText("...");
+
+    if (Utils::isDarkMode(this))
+        chooseFilePathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_dark.css"));
+    else
+        chooseFilePathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
 
     // Key path
     keyPathLabel = new QLabel;
@@ -52,9 +57,13 @@ UploadDialog::UploadDialog(
     keyPathLineEdit = new QLineEdit;
     keyPathLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
 
-    inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(keyPathLabel);
-    inputLayouts.back()->addWidget(keyPathLineEdit);
+    chooseKeyPathButton = new QPushButton;
+    chooseKeyPathButton->setText("...");
+
+    if (Utils::isDarkMode(this))
+        chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_dark.css"));
+    else
+        chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
 
     // Key size
     keySizeLabel= new QLabel;
@@ -66,10 +75,6 @@ UploadDialog::UploadDialog(
     keySizeComboBox->addItem("1024");
     keySizeComboBox->addItem("2048");
     keySizeComboBox->addItem("4096");
-
-    inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(keySizeLabel);
-    inputLayouts.back()->addWidget(keySizeComboBox);
 
     // Encryption type
     algorithmLabel = new QLabel;
@@ -87,10 +92,6 @@ UploadDialog::UploadDialog(
         this, &UploadDialog::switchEncryptionAlgorithm
     );
 
-    inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(algorithmLabel);
-    inputLayouts.back()->addWidget(algorithmComboBox);
-
     // Encrypt name checkbox
     encryptNameLabel = new QLabel;
     encryptNameLabel->setText("Encrypt name");
@@ -98,11 +99,6 @@ UploadDialog::UploadDialog(
 
     encryptNameCheckBox = new QCheckBox;
     encryptNameCheckBox->setStyleSheet("font-size: 20pt;");
-
-    inputLayouts.push_back(new QHBoxLayout);
-    inputLayouts.back()->addWidget(encryptNameLabel);
-    inputLayouts.back()->addStretch();
-    inputLayouts.back()->addWidget(encryptNameCheckBox);
 
     using namespace Utils;
 
@@ -119,6 +115,38 @@ UploadDialog::UploadDialog(
     buttonsLayout = new QHBoxLayout();
     buttonsLayout->addWidget(cancelButton);
     buttonsLayout->addWidget(uploadButton);
+
+    // Assembling the layouts
+    inputLayouts.push_back(new QHBoxLayout);
+
+    // Qt ownership system will handle deletion
+    auto* labelsLayout = new QVBoxLayout;
+    labelsLayout->addWidget(filePathLabel);
+    labelsLayout->addWidget(keyPathLabel);
+    labelsLayout->addWidget(keySizeLabel);
+    labelsLayout->addWidget(algorithmLabel);
+    labelsLayout->addWidget(encryptNameLabel);
+
+    inputLayouts.back()->addLayout(labelsLayout);
+
+    // Same here, Qt will handle the pointer, don't yell CLion, it is not a memory leak
+    auto* fieldsLayout = new QVBoxLayout;
+
+    auto* filePathLayout = new QHBoxLayout;
+    filePathLayout->addWidget(filePathLineEdit);
+    filePathLayout->addWidget(chooseFilePathButton);
+    fieldsLayout->addLayout(filePathLayout);
+
+    auto* keyPathLayout = new QHBoxLayout;
+    keyPathLayout->addWidget(keyPathLineEdit);
+    keyPathLayout->addWidget(chooseKeyPathButton);
+    fieldsLayout->addLayout(keyPathLayout);
+
+    fieldsLayout->addWidget(keySizeComboBox);
+    fieldsLayout->addWidget(algorithmComboBox);
+    fieldsLayout->addWidget(encryptNameCheckBox);
+
+    inputLayouts.back()->addLayout(fieldsLayout);
 
     // Assembling main layout
     layout = new QVBoxLayout(this);
