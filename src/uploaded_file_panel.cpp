@@ -29,8 +29,6 @@ UploadedFilePanel::UploadedFilePanel(
     layout = new QHBoxLayout;
     this->setLayout(layout);
 
-    //this->setMaximumWidth(850);
-
     // Left side
     leftLayout = new QVBoxLayout;
 

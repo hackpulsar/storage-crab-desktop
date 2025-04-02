@@ -135,7 +135,8 @@ void UserDashboard::onUploadButtonClicked() {
     // Reading file path
     const std::string filePath = QFileDialog::getOpenFileName(
         this,
-        "Select file to upload"
+        "Select file to upload",
+        QDir::homePath()
     ).toStdString();
 
     if (filePath.empty()) return;

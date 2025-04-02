@@ -129,14 +129,16 @@ UploadDialog::UploadDialog(
 
     inputLayouts.back()->addLayout(labelsLayout);
 
-    // Same here, Qt will handle the pointer, don't yell CLion, it is not a memory leak
+    // Same here, Qt will handle the pointer
     auto* fieldsLayout = new QVBoxLayout;
 
+    // Don't yell CLion, it is not a memory leak
     auto* filePathLayout = new QHBoxLayout;
     filePathLayout->addWidget(filePathLineEdit);
     filePathLayout->addWidget(chooseFilePathButton);
     fieldsLayout->addLayout(filePathLayout);
 
+    // That is also not a memory leak, CLion stop
     auto* keyPathLayout = new QHBoxLayout;
     keyPathLayout->addWidget(keyPathLineEdit);
     keyPathLayout->addWidget(chooseKeyPathButton);
@@ -180,6 +182,15 @@ UploadDialog::UploadDialog(
         this, &UploadDialog::uploadResult,
         this, &UploadDialog::onUploadResult
     );
+
+    connect(
+        chooseFilePathButton, &QPushButton::clicked,
+        this, &UploadDialog::onChooseFilePathButtonClicked
+    );
+    connect(
+        chooseKeyPathButton, &QPushButton::clicked,
+        this, &UploadDialog::onChooseKeyPathButtonClicked
+    );
 }
 
 UploadDialog::~UploadDialog() {
@@ -208,6 +219,41 @@ void UploadDialog::onUploadResult(const API::RequestResult &result, const std::s
             "Error",
             QString::fromStdString(result.response.at("details").get<std::string>())
         );
+    }
+}
+
+void UploadDialog::onChooseFilePathButtonClicked() {
+    // Reading file path
+    const std::string newFilePath = QFileDialog::getOpenFileName(
+        this,
+        "Select file to upload",
+        QDir::homePath()
+    ).toStdString();
+
+    // Setting the new path if not empty
+    if (filePath != "") {
+        this->filePathLineEdit->setText(QString::fromStdString(newFilePath));
+        this->filePath = newFilePath;
+    }
+}
+
+void UploadDialog::onChooseKeyPathButtonClicked() {
+    auto dialog = QFileDialog(this);
+    dialog.setWindowTitle("Select a file to save the key");
+    dialog.setDirectory(QDir::homePath());
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setNameFilter(tr("Crab Key (*.crbkey);;All Files (*)"));
+    dialog.setDefaultSuffix("crbkey");
+
+    if (dialog.exec())
+    {
+        // Reading file path
+        const std::string newKeyPath = dialog.selectedFiles().first().toStdString();
+
+        // Setting the new path if not empty
+        if (filePath != "")
+            this->keyPathLineEdit->setText(QString::fromStdString(newKeyPath));
     }
 }
 

@@ -37,6 +37,12 @@ public slots:
         const std::string &success_msg
     );
 
+    // Opens file dialog to choose a file
+    void onChooseFilePathButtonClicked();
+
+    // Opens file dialog to choose where to put the key
+    void onChooseKeyPathButtonClicked();
+
     // Switches encryption algorithm
     void switchEncryptionAlgorithm(const QString &newAlgorithm);
 
