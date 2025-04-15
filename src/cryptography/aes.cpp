@@ -2,8 +2,29 @@
 
 #include <openssl/rand.h>
 #include <openssl/aes.h>
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 namespace Cryptography::AES {
+
+KeyData::KeyData(AESKey key, ByteArray iv)
+    : key(std::move(key)), iv(std::move(iv))
+{}
+
+void KeyData::exportTo(const std::string &path) {
+    nlohmann::json keyJson;
+
+    // Assemble the JSON
+    keyJson["algorithm"] = "AES";
+    keyJson["key"] = toHEX(key);
+    keyJson["iv"] = toHEX(iv);
+
+    // Write to a file
+    std::ofstream file(path);
+    if (!file.is_open())
+        throw std::runtime_error("Could not open file " + path);
+    file << keyJson.dump();
+}
 
 KeyData generateKey(const size_t key_size, const size_t iv_size) {
     AESKey key(key_size);

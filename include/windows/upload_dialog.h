@@ -71,6 +71,9 @@ private:
     // Path to a file dialog opens with
     std::string filePath;
 
+    // Path to a key file
+    std::string keyPath;
+
     // User access token
     std::string accessToken;
 

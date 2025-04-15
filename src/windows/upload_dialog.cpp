@@ -252,8 +252,10 @@ void UploadDialog::onChooseKeyPathButtonClicked() {
         const std::string newKeyPath = dialog.selectedFiles().first().toStdString();
 
         // Setting the new path if not empty
-        if (filePath != "")
+        if (newKeyPath != "") {
             this->keyPathLineEdit->setText(QString::fromStdString(newKeyPath));
+            this->keyPath = newKeyPath;
+        }
     }
 }
 
@@ -330,10 +332,7 @@ void UploadDialog::onUploadButtonClicked() {
             );
 
             // Bytes array as HEX string
-            std::ostringstream oss;
-            for (auto byte : encryptedName)
-                oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byte);
-            filename = oss.str() + fileExtension;
+            filename = Utils::toHEX(encryptedName) + fileExtension;
         }
 
         // Save encrypted file
@@ -358,6 +357,9 @@ void UploadDialog::onUploadButtonClicked() {
             encryptedFilePath,
             this->accessToken
         );
+
+        // Save the key file
+        config.exportTo(this->keyPath);
 
         // Emitting signal of upload response receive
         emit uploadResult(result, "Upload successful!");
