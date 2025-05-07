@@ -5,14 +5,13 @@ namespace Cryptography {
 
 enum class AlgorithmType {
     AES = 0,
-    RSA,
-    ECC
+    Hybrid
 };
 
 inline AlgorithmType algorithmTypeFromString(const std::string &algorithmType) {
-    if (algorithmType == "RSA") return AlgorithmType::RSA;
-    if (algorithmType == "ECC") return AlgorithmType::ECC;
-    return AlgorithmType::AES; // AES by default
+    if (algorithmType == "Hybrid (AES + RSA)")
+        return AlgorithmType::Hybrid;
+    return AlgorithmType::AES;
 }
 
 }

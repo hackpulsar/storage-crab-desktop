@@ -16,6 +16,7 @@
 #include "windows/user_dashboard.h"
 #include "cryptography/algorithm_types.h"
 #include "cryptography/aes.h"
+#include "cryptography/rsa.h"
 
 UploadDialog::UploadDialog(
     std::string filePath,
@@ -84,8 +85,7 @@ UploadDialog::UploadDialog(
     algorithmComboBox = new QComboBox;
     algorithmComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
     algorithmComboBox->addItem("AES");
-    algorithmComboBox->addItem("RSA");
-    algorithmComboBox->addItem("ECC");
+    algorithmComboBox->addItem("Hybrid (AES + RSA)");
 
     connect(
         algorithmComboBox, &QComboBox::currentTextChanged,
@@ -312,28 +312,61 @@ void UploadDialog::onUploadButtonClicked() {
         content << sourceFile.rdbuf();
         sourceFile.close();
 
-        // Generate config
-        auto config = Cryptography::AES::generateKey(
-            std::atoi(this->keySizeComboBox->currentText().toStdString().c_str()),
-            IV_SIZE
-        );
-
-        // Encrypt with freshly generated config
-        auto encrypted = Cryptography::AES::encrypt(config, content.str());
+        // Encrypted bytes will get saved here
+        Utils::ByteArray encrypted;
 
         // Extract file extension
         const std::string fileExtension = filename.substr(filename.find_first_of('.'));
 
+        // Generate config
+        auto AESconfig = Cryptography::AES::generateKey(
+            std::atoi(this->keySizeComboBox->currentText().toStdString().c_str()) / 32,
+            IV_SIZE
+        );
+
+        // Encrypt with freshly generated config
+        encrypted = Cryptography::AES::encrypt(AESconfig, content.str());
+
         // Encrypt name if checked
         if (this->encryptNameCheckBox->isChecked()) {
             auto encryptedName = Cryptography::AES::encrypt(
-                config,
+                AESconfig,
                 filename.substr(0, filename.find_first_of('.'))
             );
 
             // Bytes array as HEX string
             filename = Utils::toHEX(encryptedName) + fileExtension;
         }
+
+        auto configJson = AESconfig.toJSON();
+
+        switch (this->encryptionAlgorithm) {
+            // Uploading in a hybrid form. AES is used for file and filename encryption
+            // and RSA is for encrypting an AES key,
+            case Cryptography::AlgorithmType::Hybrid: {
+                // Generate RSA config
+                auto RSAconfig = Cryptography::RSA::generateKey(
+                    std::atoi(this->keySizeComboBox->currentText().toStdString().c_str())
+                );
+
+                // Encrypt the AES key
+                encrypted = Cryptography::RSA::encrypt(RSAconfig, Utils::toHEX(AESconfig.key));
+
+                // Save the config file
+                configJson["type"] = "hybrid";
+                configJson["AES"]["key"] = Utils::toHEX(encrypted);
+                configJson["RSA"]["private_key"] = Cryptography::RSA::keyToString(RSAconfig.keyPair, true);
+                configJson["RSA"]["public_key"] = Cryptography::RSA::keyToString(RSAconfig.keyPair, false);
+
+                break;
+            }
+            default: break;
+        }
+
+        // Save the config file
+        std::ofstream file(this->keyPath);
+        file << configJson.dump();
+        file.close();
 
         // Save encrypted file
 #ifdef _WIN32
@@ -357,9 +390,6 @@ void UploadDialog::onUploadButtonClicked() {
             encryptedFilePath,
             this->accessToken
         );
-
-        // Save the key file
-        config.exportTo(this->keyPath);
 
         // Emitting signal of upload response receive
         emit uploadResult(result, "Upload successful!");

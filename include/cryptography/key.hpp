@@ -1,14 +1,14 @@
 #ifndef KEY_HPP
 #define KEY_HPP
 
-#include <string>
+#include <nlohmann/json.hpp>
 
 namespace Cryptography {
 
 class Key {
 public:
     virtual ~Key() = default;
-    virtual void exportTo(const std::string& path) = 0;
+    virtual nlohmann::json toJSON() { return nlohmann::json(); };
 };
 
 }

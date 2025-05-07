@@ -1,6 +1,8 @@
 #ifndef AES_H
 #define AES_H
 
+#include <nlohmann/json.hpp>
+
 #include "key.hpp"
 #include "utils/byte_array.hpp"
 
@@ -21,8 +23,7 @@ struct KeyData final : Key {
     AESKey key;
     ByteArray iv;
 
-    // Exports key into a .crbkey file (JSON format)
-    void exportTo(const std::string& path) override;
+    nlohmann::json toJSON() override;
 };
 
 // Generates AES key with size

@@ -133,7 +133,7 @@ void LoginWindow::onLoginButtonClicked() {
     QThread* loginRequestThread = QThread::create([this] {
         API::RequestResult result = API::Requests::POST(
             API::TOKEN_OBTAIN_URL,
-    {
+            {
                 {"email", emailLineEdit->text().toStdString()},
                 {"password_hash", passwordLineEdit->text().toStdString()},
             }
