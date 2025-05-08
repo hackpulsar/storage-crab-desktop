@@ -6,8 +6,8 @@
 
 namespace Cryptography::AES {
 
-KeyData::KeyData(AESKey key, ByteArray iv)
-    : key(std::move(key)), iv(std::move(iv))
+KeyData::KeyData(AESKey key, ByteArray iv, const AESType type)
+    : key(std::move(key)), iv(std::move(iv)), type(type)
 {}
 
 nlohmann::json KeyData::toJSON() {
@@ -21,18 +21,18 @@ nlohmann::json KeyData::toJSON() {
     return keyJson;
 }
 
-KeyData generateKey(const size_t key_size, const size_t iv_size) {
-    AESKey key(key_size);
+KeyData generateKey(AESType type) {
+    AESKey key((int)type);
 
-    if (!RAND_bytes(key.data(), key_size))
+    if (!RAND_bytes(key.data(), (int)type))
         throw std::runtime_error("Failed to generate AES key");
 
-    ByteArray iv(iv_size);
+    ByteArray iv(IV_SIZE);
 
-    if (!RAND_bytes(iv.data(), iv_size))
+    if (!RAND_bytes(iv.data(), IV_SIZE))
         throw std::runtime_error("Failed to generate AES iv");
 
-    return {key, iv};
+    return {key, iv, type};
 }
 
 ByteArray encrypt(const KeyData& config, const std::string& input) {
@@ -40,10 +40,17 @@ ByteArray encrypt(const KeyData& config, const std::string& input) {
     if (!ctx)
         throw std::runtime_error("Failed to create EVP_CIPHER_CTX");
 
+    const EVP_CIPHER* cipher = nullptr;
+    switch (config.type) {
+        case AESType::AES_128: cipher = EVP_aes_128_cbc(); break;
+        case AESType::AES_192: cipher = EVP_aes_192_cbc(); break;
+        case AESType::AES_256: cipher = EVP_aes_256_cbc(); break;
+    }
+
     // Initialize encryption context
     const int init_result = EVP_EncryptInit_ex(
         ctx,
-        EVP_aes_256_cbc(),
+        cipher,
         nullptr,
         config.key.data(),
         config.iv.data()

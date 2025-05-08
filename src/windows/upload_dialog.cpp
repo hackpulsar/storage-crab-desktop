@@ -66,17 +66,6 @@ UploadDialog::UploadDialog(
     else
         chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
 
-    // Key size
-    keySizeLabel= new QLabel;
-    keySizeLabel->setText("Key size (bits)");
-    keySizeLabel->setStyleSheet("font-size: 20pt");
-
-    keySizeComboBox = new QComboBox;
-    keySizeComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    keySizeComboBox->addItem("1024");
-    keySizeComboBox->addItem("2048");
-    keySizeComboBox->addItem("4096");
-
     // Encryption type
     algorithmLabel = new QLabel;
     algorithmLabel->setText("Encryption type");
@@ -88,9 +77,38 @@ UploadDialog::UploadDialog(
     algorithmComboBox->addItem("Hybrid (AES + RSA)");
 
     connect(
-        algorithmComboBox, &QComboBox::currentTextChanged,
-        this, &UploadDialog::switchEncryptionAlgorithm
-    );
+       algorithmComboBox, &QComboBox::currentTextChanged,
+       this, &UploadDialog::switchEncryptionAlgorithm
+   );
+
+    // AES type
+    aesTypeLabel = new QLabel;
+    aesTypeLabel->setText("AES Type");
+    aesTypeLabel->setStyleSheet("font-size: 20pt");
+
+    aesTypeComboBox = new QComboBox;
+    aesTypeComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
+    aesTypeComboBox->addItem("AES-128");
+    aesTypeComboBox->addItem("AES-192");
+    aesTypeComboBox->addItem("AES-256");
+
+    connect(
+       aesTypeComboBox, &QComboBox::currentTextChanged,
+       this, &UploadDialog::switchAESType
+   );
+
+    // Key size
+    keySizeLabel= new QLabel;
+    keySizeLabel->setText("RSA key size (bits)");
+    keySizeLabel->setStyleSheet("font-size: 20pt");
+    keySizeLabel->setEnabled(false);
+
+    keySizeComboBox = new QComboBox;
+    keySizeComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
+    keySizeComboBox->addItem("1024");
+    keySizeComboBox->addItem("2048");
+    keySizeComboBox->addItem("4096");
+    keySizeComboBox->setEnabled(false);
 
     // Encrypt name checkbox
     encryptNameLabel = new QLabel;
@@ -123,8 +141,9 @@ UploadDialog::UploadDialog(
     auto* labelsLayout = new QVBoxLayout;
     labelsLayout->addWidget(filePathLabel);
     labelsLayout->addWidget(keyPathLabel);
-    labelsLayout->addWidget(keySizeLabel);
     labelsLayout->addWidget(algorithmLabel);
+    labelsLayout->addWidget(aesTypeLabel);
+    labelsLayout->addWidget(keySizeLabel);
     labelsLayout->addWidget(encryptNameLabel);
 
     inputLayouts.back()->addLayout(labelsLayout);
@@ -144,8 +163,9 @@ UploadDialog::UploadDialog(
     keyPathLayout->addWidget(chooseKeyPathButton);
     fieldsLayout->addLayout(keyPathLayout);
 
-    fieldsLayout->addWidget(keySizeComboBox);
     fieldsLayout->addWidget(algorithmComboBox);
+    fieldsLayout->addWidget(aesTypeComboBox);
+    fieldsLayout->addWidget(keySizeComboBox);
     fieldsLayout->addWidget(encryptNameCheckBox);
 
     inputLayouts.back()->addLayout(fieldsLayout);
@@ -262,6 +282,20 @@ void UploadDialog::onChooseKeyPathButtonClicked() {
 void UploadDialog::switchEncryptionAlgorithm(const QString &newAlgorithm) {
     const auto algorithmType = Cryptography::algorithmTypeFromString(newAlgorithm.toStdString());
     this->encryptionAlgorithm = algorithmType;
+
+    // Disable/enable RSA key size UI elements
+    if (this->encryptionAlgorithm == Cryptography::AlgorithmType::AES) {
+        this->keySizeLabel->setEnabled(false);
+        this->keySizeComboBox->setEnabled(false);
+    } else {
+        this->keySizeLabel->setEnabled(true);
+        this->keySizeComboBox->setEnabled(true);
+    }
+}
+
+void UploadDialog::switchAESType(const QString &newAESType) {
+    const auto aesType = Cryptography::AESTypeFromString(newAESType.toStdString());
+    this->AESType = aesType;
 }
 
 void UploadDialog::onError(const std::string &message) {
@@ -319,10 +353,7 @@ void UploadDialog::onUploadButtonClicked() {
         const std::string fileExtension = filename.substr(filename.find_first_of('.'));
 
         // Generate config
-        auto AESconfig = Cryptography::AES::generateKey(
-            std::atoi(this->keySizeComboBox->currentText().toStdString().c_str()) / 32,
-            IV_SIZE
-        );
+        auto AESconfig = Cryptography::AES::generateKey(this->AESType);
 
         // Encrypt with freshly generated config
         encrypted = Cryptography::AES::encrypt(AESconfig, content.str());

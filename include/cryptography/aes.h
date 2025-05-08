@@ -3,6 +3,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "algorithm_types.h"
 #include "key.hpp"
 #include "utils/byte_array.hpp"
 
@@ -17,17 +18,19 @@ using namespace Utils;
 typedef ByteArray AESKey;
 
 struct KeyData final : Key {
-    KeyData(AESKey key, ByteArray iv);
+    KeyData(AESKey key, ByteArray iv, AESType type);
     ~KeyData() override = default;
 
     AESKey key;
     ByteArray iv;
 
+    AESType type;
+
     nlohmann::json toJSON() override;
 };
 
-// Generates AES key with size
-KeyData generateKey(size_t key_size, size_t iv_size);
+// Generates AES key with size based on type
+KeyData generateKey(AESType type);
 
 // Encrypts a string and outputs a byte array
 ByteArray encrypt(const KeyData& config, const std::string& input);

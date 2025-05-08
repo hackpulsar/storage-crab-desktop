@@ -45,6 +45,9 @@ public slots:
     // Switches encryption algorithm
     void switchEncryptionAlgorithm(const QString &newAlgorithm);
 
+    // Switches AES type
+    void switchAESType(const QString &newAESType);
+
     // Handles errors. Shows a message box with error message
     void onError(const std::string &message);
 
@@ -89,16 +92,23 @@ private:
     QLineEdit *keyPathLineEdit;
     QPushButton *chooseKeyPathButton;
 
-    // Key size
-    QLabel *keySizeLabel;
-    QComboBox *keySizeComboBox;
-
     // Encryption algorithm
     QLabel *algorithmLabel;
     QComboBox *algorithmComboBox;
 
     // Current selected encryption algorithm
-    Cryptography::AlgorithmType encryptionAlgorithm;
+    Cryptography::AlgorithmType encryptionAlgorithm = Cryptography::AlgorithmType::AES;
+
+    // RSA key size (if selected)
+    QLabel *keySizeLabel;
+    QComboBox *keySizeComboBox;
+
+    // AES Type
+    QLabel *aesTypeLabel;
+    QComboBox *aesTypeComboBox;
+
+    // Current selected AES type
+    Cryptography::AESType AESType = Cryptography::AESType::AES_128;
 
     QLabel *encryptNameLabel;
     QCheckBox *encryptNameCheckBox;
