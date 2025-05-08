@@ -2,6 +2,7 @@
 #include "ui_uploaded_file_panel.h"
 
 #include "utils/styles_loader.hpp"
+#include "utils/dark_mode.hpp"
 #include "file_data.hpp"
 
 UploadedFilePanel::UploadedFilePanel(
@@ -18,7 +19,7 @@ UploadedFilePanel::UploadedFilePanel(
     QPalette pal = palette();
     pal.setColor(
         QPalette::Window,
-        palette().color(QPalette::Window).lightness() < 128 ?
+        Utils::isDarkMode(this) ?
             QColor::fromRgb(40, 40, 40) : QColor::fromRgb(211, 211, 211)
     );
     setAutoFillBackground(true);
@@ -34,10 +35,12 @@ UploadedFilePanel::UploadedFilePanel(
     filenameLabel = new QLabel(this);
     filenameLabel->setText(QString::fromStdString(fileData.name));
     filenameLabel->setStyleSheet("font-size: 20pt");
+    filenameLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    filenameLabel->setWordWrap(true);
 
     pathLabel = new QLabel(this);
     pathLabel->setStyleSheet("font-size: 14pt");
-    pathLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    pathLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     pathLabel->setWordWrap(true);
 
     leftLayout->addWidget(filenameLabel);
@@ -80,11 +83,20 @@ UploadedFilePanel::~UploadedFilePanel() {
 
 void UploadedFilePanel::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
+
     pathLabel->setText(
         QFontMetrics(pathLabel->font()).elidedText(
             QString::fromStdString(this->fileData.path),
             Qt::ElideMiddle,
             pathLabel->width()
+        )
+    );
+
+    filenameLabel->setText(
+        QFontMetrics(filenameLabel->font()).elidedText(
+            QString::fromStdString(this->fileData.name),
+            Qt::ElideMiddle,
+            filenameLabel->width()
         )
     );
 }

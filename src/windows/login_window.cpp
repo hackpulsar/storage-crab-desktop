@@ -46,7 +46,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     emailLineEdit->setMinimumWidth(200);
     emailLineEdit->setPlaceholderText("Email");
     emailLineEdit->setAlignment(Qt::AlignCenter);
-    emailLineEdit->setStyleSheet("font-size: 16pt;");
+    emailLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
     emailLineEdit->setText("admin@admin.com");
 
     // Password text field
@@ -55,7 +55,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     passwordLineEdit->setMinimumWidth(200);
     passwordLineEdit->setPlaceholderText("Password");
     passwordLineEdit->setAlignment(Qt::AlignCenter);
-    passwordLineEdit->setStyleSheet("font-size: 16pt;");
+    passwordLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
     passwordLineEdit->setText("admin");
 
     // Login button
@@ -133,7 +133,7 @@ void LoginWindow::onLoginButtonClicked() {
     QThread* loginRequestThread = QThread::create([this] {
         API::RequestResult result = API::Requests::POST(
             API::TOKEN_OBTAIN_URL,
-    {
+            {
                 {"email", emailLineEdit->text().toStdString()},
                 {"password_hash", passwordLineEdit->text().toStdString()},
             }

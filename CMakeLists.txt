@@ -51,6 +51,9 @@ set(CMAKE_AUTOUIC ON)
 # Add the forms directory to the AUTOUIC search paths
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_AUTOUIC_SEARCH_PATHS} ${FORMS_DIR})
 
+# OpenSSL
+find_package(OpenSSL REQUIRED)
+
 # Add the executable based on platform
 if (WIN32)
     add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
@@ -65,6 +68,7 @@ target_link_libraries(${PROJECT_NAME}
             ${CURL_LIBRARIES}
             curlpp
             nlohmann_json::nlohmann_json
+            ${OPENSSL_LIBRARIES}
 )
 
 target_include_directories( ${PROJECT_NAME}
@@ -72,4 +76,5 @@ target_include_directories( ${PROJECT_NAME}
             ${FORMS_DIR}
             ${SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${OPENSSL_INCLUDE_DIR}
 )
