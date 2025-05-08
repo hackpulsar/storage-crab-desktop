@@ -5,6 +5,7 @@
 #include "ui_upload_dialog.h"
 
 #include <QtWidgets/QFileDialog>
+#include <QFormLayout>
 #include <QCheckBox>
 #include <QThread>
 #include <QMovie>
@@ -30,8 +31,9 @@ UploadDialog::UploadDialog(
 {
     ui->setupUi(this);
 
-    // Inputs
-    inputLayouts.reserve(2);
+    auto* formLayout = new QFormLayout;
+    formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
+    formLayout->setLabelAlignment(Qt::AlignLeft);
 
     // File path
     filePathLabel = new QLabel;
@@ -50,6 +52,10 @@ UploadDialog::UploadDialog(
     else
         chooseFilePathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
 
+    auto* filePathLayout = new QHBoxLayout;
+    filePathLayout->addWidget(filePathLineEdit);
+    filePathLayout->addWidget(chooseFilePathButton);
+
     // Key path
     keyPathLabel = new QLabel;
     keyPathLabel->setText("Key path");
@@ -65,6 +71,10 @@ UploadDialog::UploadDialog(
         chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_dark.css"));
     else
         chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
+
+    auto* keyPathLayout = new QHBoxLayout;
+    keyPathLayout->addWidget(keyPathLineEdit);
+    keyPathLayout->addWidget(chooseKeyPathButton);
 
     // Encryption type
     algorithmLabel = new QLabel;
@@ -134,46 +144,16 @@ UploadDialog::UploadDialog(
     buttonsLayout->addWidget(cancelButton);
     buttonsLayout->addWidget(uploadButton);
 
-    // Assembling the layouts
-    inputLayouts.push_back(new QHBoxLayout);
-
-    // Qt ownership system will handle deletion
-    auto* labelsLayout = new QVBoxLayout;
-    labelsLayout->addWidget(filePathLabel);
-    labelsLayout->addWidget(keyPathLabel);
-    labelsLayout->addWidget(algorithmLabel);
-    labelsLayout->addWidget(aesTypeLabel);
-    labelsLayout->addWidget(keySizeLabel);
-    labelsLayout->addWidget(encryptNameLabel);
-
-    inputLayouts.back()->addLayout(labelsLayout);
-
-    // Same here, Qt will handle the pointer
-    auto* fieldsLayout = new QVBoxLayout;
-
-    // Don't yell CLion, it is not a memory leak
-    auto* filePathLayout = new QHBoxLayout;
-    filePathLayout->addWidget(filePathLineEdit);
-    filePathLayout->addWidget(chooseFilePathButton);
-    fieldsLayout->addLayout(filePathLayout);
-
-    // That is also not a memory leak, CLion stop
-    auto* keyPathLayout = new QHBoxLayout;
-    keyPathLayout->addWidget(keyPathLineEdit);
-    keyPathLayout->addWidget(chooseKeyPathButton);
-    fieldsLayout->addLayout(keyPathLayout);
-
-    fieldsLayout->addWidget(algorithmComboBox);
-    fieldsLayout->addWidget(aesTypeComboBox);
-    fieldsLayout->addWidget(keySizeComboBox);
-    fieldsLayout->addWidget(encryptNameCheckBox);
-
-    inputLayouts.back()->addLayout(fieldsLayout);
+    formLayout->addRow(filePathLabel, filePathLayout);
+    formLayout->addRow(keyPathLabel, keyPathLayout);
+    formLayout->addRow(algorithmLabel, algorithmComboBox);
+    formLayout->addRow(aesTypeLabel, aesTypeComboBox);
+    formLayout->addRow(keySizeLabel, keySizeComboBox);
+    formLayout->addRow(encryptNameLabel, encryptNameCheckBox);
 
     // Assembling main layout
     layout = new QVBoxLayout(this);
-    for (const auto& l : inputLayouts)
-        layout->addLayout(l);
+    layout->addLayout(formLayout);
     layout->addLayout(buttonsLayout);
 
     // Loading animation

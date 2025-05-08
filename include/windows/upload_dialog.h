@@ -113,9 +113,6 @@ private:
     QLabel *encryptNameLabel;
     QCheckBox *encryptNameCheckBox;
 
-    // Input text fields layouts
-    std::vector<QHBoxLayout*> inputLayouts;
-
     // Bottom buttons layout
     QHBoxLayout *buttonsLayout;
     QPushButton *uploadButton;
