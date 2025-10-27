@@ -27,74 +27,15 @@ UserDashboard::UserDashboard(
     ui->setupUi(this);
     this->setWindowTitle(QString::fromStdString(username + "'s dashboard"));
 
-    centralWidget = new QWidget(this);
-    this->setCentralWidget(centralWidget);
-
-    using namespace Utils;
-
-    // Top panel
-    topPanelLayout = new QHBoxLayout;
-
-    logoutButton = new QPushButton(centralWidget);
-    logoutButton->setText("Log me out");
-    logoutButton->setStyleSheet(StylesLoader::loadStyleFromFile("basic_button.css"));
-
-    titleLabel = new QLabel(centralWidget);
-    titleLabel->setText("Dashboard");
-    titleLabel->setStyleSheet("font-size: 36pt");
-    titleLabel->setAlignment(Qt::AlignCenter);
-
-    usernameLabel = new QLabel(centralWidget);
-    usernameLabel->setText(QString::fromStdString(username));
-    usernameLabel->setStyleSheet("font-size: 24pt");
-    usernameLabel->setAlignment(Qt::AlignCenter);
-
-    topPanelLayout->addWidget(logoutButton);
-    topPanelLayout->addStretch();
-    topPanelLayout->addWidget(titleLabel);
-    topPanelLayout->addStretch();
-    topPanelLayout->addWidget(usernameLabel);
-
-    filesTitle = new QLabel(centralWidget);
-    filesTitle->setText("Files");
-    filesTitle->setStyleSheet("font-size: 24pt");
-
-    // Middle panel
-    middlePanelBaseWidget = new QWidget(centralWidget);
-    middlePanelLayout = new QVBoxLayout(middlePanelBaseWidget);
-
-    scrollArea = new QScrollArea;
-    scrollArea->setWidgetResizable(true);
-
     // Try load the files
     this->tryRetrieveFiles();
 
-    middlePanelLayout->addStretch();
-
-    middlePanelBaseWidget->setLayout(middlePanelLayout);
-    scrollArea->setWidget(middlePanelBaseWidget);
-
-    // Bottom panel
-    bottomPanelLayout = new QHBoxLayout;
-
-    uploadButton = new QPushButton(centralWidget);
-    uploadButton->setText("Upload");
-    uploadButton->setStyleSheet(StylesLoader::loadStyleFromFile("upload_button.css"));
-
-    bottomPanelLayout->addWidget(uploadButton);
-
-    layout = new QVBoxLayout(centralWidget);
-    layout->addLayout(topPanelLayout);
-    layout->addWidget(filesTitle);
-    layout->addWidget(scrollArea);
-    layout->addLayout(bottomPanelLayout);
-
     connect(
-        logoutButton, &QPushButton::clicked,
+        ui->logoutButton, &QPushButton::clicked,
         this, &UserDashboard::onLogoutButtonClicked
     );
     connect(
-        uploadButton, &QPushButton::clicked,
+        ui->uploadButton, &QPushButton::clicked,
         this, &UserDashboard::onUploadButtonClicked
     );
 
@@ -264,13 +205,13 @@ void UserDashboard::closeEvent(QCloseEvent *event) {
 
 void UserDashboard::tryRetrieveFiles() {
     API::RequestResult result = API::Requests::GET(
-        API::GET_FILES_URL,
+        std::getenv("GET_FILES_URL"),
         this->tokenPair.getAccess()
     );
 
     // Removing all the previously loaded files
     for (auto* panel : uploadedFilePanels) {
-        middlePanelLayout->removeWidget(panel);
+        ui->middlePanelLayout->removeWidget(panel);
         delete panel;
     }
     uploadedFilePanels.clear();
@@ -284,7 +225,7 @@ void UserDashboard::tryRetrieveFiles() {
                     file_data.at("size").get<size_t>(),
                     file_data.at("id").get<size_t>(),
                 },
-                scrollArea
+                ui->scrollArea
             );
 
             connect(
@@ -297,7 +238,7 @@ void UserDashboard::tryRetrieveFiles() {
             );
 
             uploadedFilePanels.push_back(panel);
-            middlePanelLayout->insertWidget(middlePanelLayout->count() - 1, uploadedFilePanels.back());
+            ui->middlePanelLayout->insertWidget(ui->middlePanelLayout->count() - 1, uploadedFilePanels.back());
         }
     } else {
         QMessageBox::critical(

@@ -15,82 +15,21 @@
 #include "utils/styles_loader.hpp"
 
 LoginWindow::LoginWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+    : QMainWindow(parent), ui(new Ui::LoginWindow)
 {
     ui->setupUi(this);
-    this->setWindowTitle("🦀 Login");
 
-    // Creating central widget
-    centralWidget = new QWidget(this);
-    this->setCentralWidget(centralWidget);
+    dotenv::init();
 
-    // Title
-    titleLabel = new QLabel(centralWidget);
-    titleLabel->setText("Storage Crab");
-    titleLabel->setStyleSheet("font-size: 56pt");
-    titleLabel->setAlignment(Qt::AlignCenter);
+    // DEBUG
+    ui->emailLineEdit->setText("admin@admin.com");
+    ui->passwordLineEdit->setText("admin");
 
-    // Subtitle
-    subtitleLabel = new QLabel(centralWidget);
-    subtitleLabel->setText("🦀");
-    subtitleLabel->setStyleSheet("font-size: 80pt");
-    subtitleLabel->setAlignment(Qt::AlignCenter);
-
-    // Error label
-    errorLabel = new QLabel(centralWidget);
-    errorLabel->setStyleSheet("font-size: 14pt; color: red;");
-    errorLabel->setAlignment(Qt::AlignCenter);
-
-    // Login text field
-    emailLineEdit = new QLineEdit(centralWidget);
-    emailLineEdit->setMinimumWidth(200);
-    emailLineEdit->setPlaceholderText("Email");
-    emailLineEdit->setAlignment(Qt::AlignCenter);
-    emailLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    emailLineEdit->setText("admin@admin.com");
-
-    // Password text field
-    passwordLineEdit = new QLineEdit(centralWidget);
-    passwordLineEdit->setEchoMode(QLineEdit::Password);
-    passwordLineEdit->setMinimumWidth(200);
-    passwordLineEdit->setPlaceholderText("Password");
-    passwordLineEdit->setAlignment(Qt::AlignCenter);
-    passwordLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    passwordLineEdit->setText("admin");
-
-    // Login button
     loadingAnimation = new QMovie(this);
     loadingAnimation->setFileName("../assets/loading.gif");
-    loginButton = new QPushButton(centralWidget);
-    loginButton->setText("Login");
-    loginButton->setIconSize(QSize(30, 30));
-    loginButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("basic_button.css"));
-
-    // Register link
-    // TODO: redirect to registration form
-    registrationLink = new QLabel(centralWidget);
-    registrationLink->setText("Dont have an account yet?");
-    registrationLink->setTextFormat(Qt::RichText);
-    registrationLink->setTextInteractionFlags(Qt::TextBrowserInteraction);
-    registrationLink->setOpenExternalLinks(true);
-    registrationLink->setAlignment(Qt::AlignCenter);
-
-    layout = new QVBoxLayout(centralWidget);
-
-    // Adding all the widgets to the layout
-    layout->addWidget(titleLabel);
-    layout->addWidget(subtitleLabel);
-    layout->addStretch();
-    layout->addWidget(errorLabel, 0, Qt::AlignHCenter);
-    layout->addWidget(emailLineEdit, 0, Qt::AlignHCenter);
-    layout->addWidget(passwordLineEdit, 0, Qt::AlignHCenter);
-    layout->addStretch();
-    layout->addWidget(loginButton, 0, Qt::AlignHCenter);
-    layout->addStretch();
-    layout->addWidget(registrationLink);
 
     // Connecting login button release signal to a custom login handler
-    connect(loginButton, &QPushButton::clicked, this, &LoginWindow::onLoginButtonClicked);
+    connect(ui->loginButton, &QPushButton::clicked, this, &LoginWindow::onLoginButtonClicked);
 
     // Connecting login response receive signal to a handler
     connect(
@@ -113,29 +52,28 @@ LoginWindow::LoginWindow(QWidget *parent)
 
 LoginWindow::~LoginWindow() {
     delete ui;
-    delete centralWidget; // Also deletes all children
 }
 
 void LoginWindow::onLoginButtonClicked() {
     // Validate input
-    if (emailLineEdit->text().isEmpty() || passwordLineEdit->text().isEmpty()) {
-        errorLabel->setText("Please fill the fields below");
+    if (ui->emailLineEdit->text().isEmpty() || ui->passwordLineEdit->text().isEmpty()) {
+        ui->errorLabel->setText("Please fill the fields below");
         return;
     }
 
     // Removing the text from login button and putting a loading animation
-    loginButton->setText("");
-    connect(loadingAnimation, &QMovie::frameChanged, loginButton, [this] {
-        loginButton->setIcon(loadingAnimation->currentPixmap());
+    ui->loginButton->setText("");
+    connect(loadingAnimation, &QMovie::frameChanged, ui->loginButton, [this] {
+        ui->loginButton->setIcon(loadingAnimation->currentPixmap());
     });
     loadingAnimation->start();
 
     QThread* loginRequestThread = QThread::create([this] {
         API::RequestResult result = API::Requests::POST(
-            API::TOKEN_OBTAIN_URL,
+            std::getenv("TOKEN_OBTAIN_URL"),
             {
-                {"email", emailLineEdit->text().toStdString()},
-                {"password_hash", passwordLineEdit->text().toStdString()},
+                {"email", ui->emailLineEdit->text().toStdString()},
+                {"password_hash", ui->passwordLineEdit->text().toStdString()},
             }
         );
 
@@ -155,7 +93,7 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
     // Validate the response
     if (response_json.contains("details")) {
         // Fail
-        errorLabel->setText(QString::fromStdString(response_json.at("details").get<std::string>()));
+        ui->errorLabel->setText(QString::fromStdString(response_json.at("details").get<std::string>()));
         this->resetLoginButton();
 
     } else {
@@ -178,6 +116,6 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
 
 void LoginWindow::resetLoginButton() {
     loadingAnimation->stop();
-    loginButton->setText("Login");
-    loginButton->setIcon(QIcon());
+    ui->loginButton->setText("Login");
+    ui->loginButton->setIcon(QIcon());
 }

@@ -1,5 +1,9 @@
 .idea
 cmake-build-debug
 cmake-build-release
+build
+.cache
+.vscode
+.env
 
 .DS_Store

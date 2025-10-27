@@ -16,7 +16,7 @@ TokenPair::TokenPair(std::string access, std::string refresh)
 
 RequestResult TokenPair::refresh() {
     RequestResult result = Requests::POST(
-        TOKEN_REFRESH_URL,
+        std::getenv("TOKEN_REFRESH_URL"),
         {{"refresh_token", this->getRefresh()}}
     );
 

@@ -31,134 +31,22 @@ UploadDialog::UploadDialog(
 {
     ui->setupUi(this);
 
-    auto* formLayout = new QFormLayout;
-    formLayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
-    formLayout->setLabelAlignment(Qt::AlignLeft);
-
-    // File path
-    filePathLabel = new QLabel;
-    filePathLabel->setText("File path");
-    filePathLabel->setStyleSheet("font-size: 20pt");
-
-    filePathLineEdit = new QLineEdit;
-    filePathLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    filePathLineEdit->setText(QString::fromStdString(this->filePath));
-
-    chooseFilePathButton = new QPushButton;
-    chooseFilePathButton->setText("...");
-
-    if (Utils::isDarkMode(this))
-        chooseFilePathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_dark.css"));
-    else
-        chooseFilePathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
-
-    auto* filePathLayout = new QHBoxLayout;
-    filePathLayout->addWidget(filePathLineEdit);
-    filePathLayout->addWidget(chooseFilePathButton);
-
-    // Key path
-    keyPathLabel = new QLabel;
-    keyPathLabel->setText("Key path");
-    keyPathLabel->setStyleSheet("font-size: 20pt");
-
-    keyPathLineEdit = new QLineEdit;
-    keyPathLineEdit->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-
-    chooseKeyPathButton = new QPushButton;
-    chooseKeyPathButton->setText("...");
-
-    if (Utils::isDarkMode(this))
-        chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_dark.css"));
-    else
-        chooseKeyPathButton->setStyleSheet(Utils::StylesLoader::loadStyleFromFile("choose_button_light.css"));
-
-    auto* keyPathLayout = new QHBoxLayout;
-    keyPathLayout->addWidget(keyPathLineEdit);
-    keyPathLayout->addWidget(chooseKeyPathButton);
-
-    // Encryption type
-    algorithmLabel = new QLabel;
-    algorithmLabel->setText("Encryption type");
-    algorithmLabel->setStyleSheet("font-size: 20pt");
-
-    algorithmComboBox = new QComboBox;
-    algorithmComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    algorithmComboBox->addItem("AES");
-    algorithmComboBox->addItem("Hybrid (AES + RSA)");
-
-    connect(
-       algorithmComboBox, &QComboBox::currentTextChanged,
-       this, &UploadDialog::switchEncryptionAlgorithm
-   );
-
-    // AES type
-    aesTypeLabel = new QLabel;
-    aesTypeLabel->setText("AES Type");
-    aesTypeLabel->setStyleSheet("font-size: 20pt");
-
-    aesTypeComboBox = new QComboBox;
-    aesTypeComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    aesTypeComboBox->addItem("AES-128");
-    aesTypeComboBox->addItem("AES-192");
-    aesTypeComboBox->addItem("AES-256");
-
-    connect(
-       aesTypeComboBox, &QComboBox::currentTextChanged,
-       this, &UploadDialog::switchAESType
-   );
-
-    // Key size
-    keySizeLabel= new QLabel;
-    keySizeLabel->setText("RSA key size (bits)");
-    keySizeLabel->setStyleSheet("font-size: 20pt");
-    keySizeLabel->setEnabled(false);
-
-    keySizeComboBox = new QComboBox;
-    keySizeComboBox->setStyleSheet("font-size: 16pt; min-height: 1.25em;");
-    keySizeComboBox->addItem("1024");
-    keySizeComboBox->addItem("2048");
-    keySizeComboBox->addItem("4096");
-    keySizeComboBox->setEnabled(false);
-
-    // Encrypt name checkbox
-    encryptNameLabel = new QLabel;
-    encryptNameLabel->setText("Encrypt name");
-    encryptNameLabel->setStyleSheet("font-size: 20pt");
-
-    encryptNameCheckBox = new QCheckBox;
-    encryptNameCheckBox->setStyleSheet("font-size: 20pt;");
-
-    using namespace Utils;
-
-    // Adding buttons
-    uploadButton = new QPushButton(this);
-    uploadButton->setText("Encrypt && Upload");
-    uploadButton->setIconSize(QSize(30, 30));
-    uploadButton->setStyleSheet(StylesLoader::loadStyleFromFile("upload_button.css"));
-
-    cancelButton = new QPushButton(this);
-    cancelButton->setText("Cancel");
-    cancelButton->setStyleSheet(StylesLoader::loadStyleFromFile("cancel_button.css"));
-
-    buttonsLayout = new QHBoxLayout();
-    buttonsLayout->addWidget(cancelButton);
-    buttonsLayout->addWidget(uploadButton);
-
-    formLayout->addRow(filePathLabel, filePathLayout);
-    formLayout->addRow(keyPathLabel, keyPathLayout);
-    formLayout->addRow(algorithmLabel, algorithmComboBox);
-    formLayout->addRow(aesTypeLabel, aesTypeComboBox);
-    formLayout->addRow(keySizeLabel, keySizeComboBox);
-    formLayout->addRow(encryptNameLabel, encryptNameCheckBox);
-
-    // Assembling main layout
-    layout = new QVBoxLayout(this);
-    layout->addLayout(formLayout);
-    layout->addLayout(buttonsLayout);
+    // Setting the file path
+    ui->filePathLineEdit->setText(QString::fromStdString(this->filePath));
 
     // Loading animation
     loadingAnimation = new QMovie(this);
     loadingAnimation->setFileName("../assets/loading.gif");
+
+    connect(
+       ui->algorithmComboBox, &QComboBox::currentTextChanged,
+       this, &UploadDialog::switchEncryptionAlgorithm
+    );
+
+    connect(
+       ui->aesTypeComboBox, &QComboBox::currentTextChanged,
+       this, &UploadDialog::switchAESType
+    );
 
     connect(
         this, &UploadDialog::error,
@@ -166,11 +54,11 @@ UploadDialog::UploadDialog(
     );
 
     connect(
-        uploadButton, &QPushButton::clicked,
+        ui->uploadButton, &QPushButton::clicked,
         this, &UploadDialog::onUploadButtonClicked
     );
     connect(
-        cancelButton, &QPushButton::clicked,
+        ui->cancelButton, &QPushButton::clicked,
         this, &UploadDialog::reject
     );
 
@@ -184,11 +72,11 @@ UploadDialog::UploadDialog(
     );
 
     connect(
-        chooseFilePathButton, &QPushButton::clicked,
+        ui->chooseFilePathButton, &QPushButton::clicked,
         this, &UploadDialog::onChooseFilePathButtonClicked
     );
     connect(
-        chooseKeyPathButton, &QPushButton::clicked,
+        ui->chooseKeyPathButton, &QPushButton::clicked,
         this, &UploadDialog::onChooseKeyPathButtonClicked
     );
 }
@@ -232,7 +120,7 @@ void UploadDialog::onChooseFilePathButtonClicked() {
 
     // Setting the new path if not empty
     if (filePath != "") {
-        this->filePathLineEdit->setText(QString::fromStdString(newFilePath));
+        ui->filePathLineEdit->setText(QString::fromStdString(newFilePath));
         this->filePath = newFilePath;
     }
 }
@@ -253,7 +141,7 @@ void UploadDialog::onChooseKeyPathButtonClicked() {
 
         // Setting the new path if not empty
         if (newKeyPath != "") {
-            this->keyPathLineEdit->setText(QString::fromStdString(newKeyPath));
+            ui->keyPathLineEdit->setText(QString::fromStdString(newKeyPath));
             this->keyPath = newKeyPath;
         }
     }
@@ -265,11 +153,11 @@ void UploadDialog::switchEncryptionAlgorithm(const QString &newAlgorithm) {
 
     // Disable/enable RSA key size UI elements
     if (this->encryptionAlgorithm == Cryptography::AlgorithmType::AES) {
-        this->keySizeLabel->setEnabled(false);
-        this->keySizeComboBox->setEnabled(false);
+        ui->keySizeLabel->setEnabled(false);
+        ui->keySizeComboBox->setEnabled(false);
     } else {
-        this->keySizeLabel->setEnabled(true);
-        this->keySizeComboBox->setEnabled(true);
+        ui->keySizeLabel->setEnabled(true);
+        ui->keySizeComboBox->setEnabled(true);
     }
 }
 
@@ -290,7 +178,7 @@ void UploadDialog::onError(const std::string &message) {
 }
 
 void UploadDialog::onUploadButtonClicked() {
-    if (this->filePathLineEdit->text().isEmpty() || this->keyPathLineEdit->text().isEmpty()) {
+    if (ui->filePathLineEdit->text().isEmpty() || ui->keyPathLineEdit->text().isEmpty()) {
         QMessageBox::critical(
             this,
             "Error",
@@ -305,11 +193,11 @@ void UploadDialog::onUploadButtonClicked() {
     );
 
     // Adding loading icon
-    uploadButton->setText("");
+    ui->uploadButton->setText("");
     connect(
         loadingAnimation, &QMovie::frameChanged,
-        uploadButton, [this] {
-        uploadButton->setIcon(loadingAnimation->currentPixmap());
+        ui->uploadButton, [this] {
+        ui->uploadButton->setIcon(loadingAnimation->currentPixmap());
     });
     loadingAnimation->start();
 
@@ -339,7 +227,7 @@ void UploadDialog::onUploadButtonClicked() {
         encrypted = Cryptography::AES::encrypt(AESconfig, content.str());
 
         // Encrypt name if checked
-        if (this->encryptNameCheckBox->isChecked()) {
+        if (ui->encryptNameCheckBox->isChecked()) {
             auto encryptedName = Cryptography::AES::encrypt(
                 AESconfig,
                 filename.substr(0, filename.find_first_of('.'))
@@ -357,7 +245,7 @@ void UploadDialog::onUploadButtonClicked() {
             case Cryptography::AlgorithmType::Hybrid: {
                 // Generate RSA config
                 auto RSAconfig = Cryptography::RSA::generateKey(
-                    std::atoi(this->keySizeComboBox->currentText().toStdString().c_str())
+                    std::atoi(ui->keySizeComboBox->currentText().toStdString().c_str())
                 );
 
                 // Encrypt the AES key
@@ -396,7 +284,7 @@ void UploadDialog::onUploadButtonClicked() {
         encryptedFile.close();
 
         API::RequestResult result = API::Requests::POST_UPLOAD(
-            API::UPLOAD_URL,
+            std::getenv("UPLOAD_URL"),
             {{"filename", filename + ".enc"}},
             encryptedFilePath,
             this->accessToken
@@ -412,6 +300,6 @@ void UploadDialog::onUploadButtonClicked() {
 
 void UploadDialog::resetUploadButton() {
     loadingAnimation->stop();
-    uploadButton->setText("Encrypt && Upload");
-    uploadButton->setIcon(QIcon());
+    ui->uploadButton->setText("Encrypt && Upload");
+    ui->uploadButton->setIcon(QIcon());
 }

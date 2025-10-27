@@ -79,46 +79,14 @@ private:
     // User access token
     std::string accessToken;
 
-    // Main layout
-    QVBoxLayout *layout;
-
-    // File path
-    QLabel *filePathLabel;
-    QLineEdit *filePathLineEdit;
-    QPushButton *chooseFilePathButton;
-
-    // Key path
-    QLabel *keyPathLabel;
-    QLineEdit *keyPathLineEdit;
-    QPushButton *chooseKeyPathButton;
-
-    // Encryption algorithm
-    QLabel *algorithmLabel;
-    QComboBox *algorithmComboBox;
+    // Loadng animation
+    QMovie *loadingAnimation;
 
     // Current selected encryption algorithm
     Cryptography::AlgorithmType encryptionAlgorithm = Cryptography::AlgorithmType::AES;
 
-    // RSA key size (if selected)
-    QLabel *keySizeLabel;
-    QComboBox *keySizeComboBox;
-
-    // AES Type
-    QLabel *aesTypeLabel;
-    QComboBox *aesTypeComboBox;
-
     // Current selected AES type
     Cryptography::AESType AESType = Cryptography::AESType::AES_128;
-
-    QLabel *encryptNameLabel;
-    QCheckBox *encryptNameCheckBox;
-
-    // Bottom buttons layout
-    QHBoxLayout *buttonsLayout;
-    QPushButton *uploadButton;
-    QPushButton *cancelButton;
-
-    QMovie *loadingAnimation;
 
 };
 

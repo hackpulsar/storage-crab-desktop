@@ -1,22 +1,267 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <author/>
-    <comment/>
-    <exportmacro/>
-    <class>UploadDialog</class>
-    <widget class="QDialog" name="UploadDialog">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>650</width>
-                <height>300</height>
-            </rect>
+ <class>UploadDialog</class>
+ <widget class="QDialog" name="UploadDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>650</width>
+    <height>306</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>20</pointsize>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QFormLayout" name="formLayout_2">
+     <property name="fieldGrowthPolicy">
+      <enum>QFormLayout::FieldGrowthPolicy::ExpandingFieldsGrow</enum>
+     </property>
+     <property name="labelAlignment">
+      <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+     </property>
+     <property name="formAlignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <item row="0" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0">
+       <property name="spacing">
+        <number>-1</number>
+       </property>
+       <property name="sizeConstraint">
+        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="filePathLineEdit">
+         <property name="font">
+          <font>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">min-height: 1.25em</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="chooseFilePathButton">
+         <property name="styleSheet">
+          <string notr="true">    color: white;
+    font-size: 20pt;
+    border: 2px;
+    min-width: 1.25em;</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="filePathLabel">
+       <property name="text">
+        <string>File path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="keyPathLabel">
+       <property name="text">
+        <string>Key path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLineEdit" name="keyPathLineEdit">
+         <property name="font">
+          <font>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">min-height: 1.25em</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="chooseKeyPathButton">
+         <property name="styleSheet">
+          <string notr="true">    color: white;
+    font-size: 20pt;
+    border: 2px;
+    min-width: 1.25em;</string>
+         </property>
+         <property name="text">
+          <string>...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="algorithmLabel">
+       <property name="text">
+        <string>Encryption type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="aesTypeLabel">
+       <property name="text">
+        <string>AES Type</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="keySizeLabel">
+       <property name="text">
+        <string>RSA key size (bits)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="encryptNameLabel">
+       <property name="text">
+        <string>Encrypt name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QCheckBox" name="encryptNameCheckBox">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="keySizeComboBox">
+       <item>
+        <property name="text">
+         <string>1024</string>
         </property>
-        <property name="windowTitle">
-            <string>UploadDialog</string>
+       </item>
+       <item>
+        <property name="text">
+         <string>2048</string>
         </property>
-    </widget>
-    <pixmapfunction/>
-    <connections/>
+       </item>
+       <item>
+        <property name="text">
+         <string>4096</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="aesTypeComboBox">
+       <item>
+        <property name="text">
+         <string>AES-128</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AES-192</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>AES-256</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="algorithmComboBox">
+       <item>
+        <property name="text">
+         <string>AES</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Hybrid (AES + RSA)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="cancelButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    color: white;
+    font-size: 24pt;
+    background-color: #CF312B;
+    border: 0;
+    min-width: 125px;
+    min-height: 40px;
+}
+QPushButton:hover {
+    background-color: #B12924;
+}
+QPushButton:pressed {
+    background-color: #9D231E;
+}</string>
+       </property>
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uploadButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton {
+    color: white;
+    font-size: 24pt;
+    background-color: #62BE63;
+    border: 0;
+    min-width: 200px;
+    min-height: 40px;
+    padding: 0 10px;
+}
+QPushButton:hover {
+    background-color: #58A759;
+}
+QPushButton:pressed {
+    background-color: #4C8F4D;
+}</string>
+       </property>
+       <property name="text">
+        <string>Encrypt &amp; Upload</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>

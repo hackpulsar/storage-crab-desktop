@@ -31,18 +31,6 @@ private:
 
     Ui::UploadedFilePanel *ui;
 
-    QHBoxLayout *layout;
-
-    // Left part
-    QVBoxLayout *leftLayout;
-    QLabel *filenameLabel;
-    QLabel *pathLabel;
-
-    // Right part
-    QLabel *sizeLabel;
-    QPushButton *downloadButton;
-    QPushButton *deleteButton;
-
     FileData fileData;
 
 };

@@ -73,26 +73,6 @@ private:
     void tryRetrieveFiles();
 
     Ui::UserDashboard *ui;
-    QWidget *centralWidget;
-
-    // Main window layout
-    QVBoxLayout *layout;
-
-    // Top panel
-    QHBoxLayout *topPanelLayout;
-    QPushButton *logoutButton;
-    QLabel *titleLabel;
-    QLabel *usernameLabel;
-
-    // Middle panel
-    QScrollArea *scrollArea;
-    QWidget *middlePanelBaseWidget;
-    QVBoxLayout *middlePanelLayout;
-    QLabel *filesTitle;
-
-    // Bottom panel
-    QHBoxLayout *bottomPanelLayout;
-    QPushButton *uploadButton;
 
     // Token pair
     API::TokenPair tokenPair;

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.29)
 project(storage-crab-desktop)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 
@@ -45,8 +46,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent)
 set(FORMS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forms)
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # Add the forms directory to the AUTOUIC search paths
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_AUTOUIC_SEARCH_PATHS} ${FORMS_DIR})
@@ -54,11 +56,14 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_AUTOUIC_SEARCH_PATHS} ${FORMS_DIR})
 # OpenSSL
 find_package(OpenSSL REQUIRED)
 
+# dotenv
+add_subdirectory(deps)
+
 # Add the executable based on platform
 if (WIN32)
-    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS})
+    add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS} ${FORMS})
 elseif(UNIX)
-    add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+    add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS})
 endif()
 
 target_link_libraries(${PROJECT_NAME}
@@ -69,6 +74,7 @@ target_link_libraries(${PROJECT_NAME}
             curlpp
             nlohmann_json::nlohmann_json
             ${OPENSSL_LIBRARIES}
+            dotenv
 )
 
 target_include_directories( ${PROJECT_NAME}

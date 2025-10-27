@@ -11,7 +11,7 @@
 
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui { class LoginWindow; }
 QT_END_NAMESPACE
 
 class LoginWindow final : public QMainWindow {
@@ -33,24 +33,10 @@ private:
     // Resets login button
     void resetLoginButton();
 
-    Ui::MainWindow *ui;
-    QWidget *centralWidget;
-    QVBoxLayout *layout;
-
-    // Title
-    QLabel *titleLabel;
-    QLabel *subtitleLabel;
-
-    // Login block
-    QLabel *errorLabel;
-    QLineEdit *emailLineEdit;
-    QLineEdit *passwordLineEdit;
+    Ui::LoginWindow *ui;
 
     // Loading animation (GIF) for a login button
     QMovie *loadingAnimation;
-    QPushButton *loginButton;
-
-    QLabel *registrationLink;
 
 signals:
     void loginResponseReceived(const std::string& response);
