@@ -72,6 +72,12 @@ private:
     // Retrieves files related to current user from remote storage
     void tryRetrieveFiles();
 
+    // Sets active flag, with mutex
+    void setActive(bool value);
+
+    // Returns active flag, with mutex
+    bool getActive();
+
     Ui::UserDashboard *ui;
 
     // Token pair
@@ -79,11 +85,15 @@ private:
 
     // A flag indicating whether the user is active or not.
     // Used in multiple threads.
-    std::atomic<bool> active;
+    bool active;
 
     // Thread for token refresh background job
     std::thread tokenRefreshThread;
 
+    // Mutex for accessing active flag (even though it is atomic)
+    // Avoids "late wakeups"
+    std::mutex activeMutex;
+    
     // Condition variable for token refresh loop
     std::condition_variable tokenRefreshCV;
 

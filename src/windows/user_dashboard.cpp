@@ -25,7 +25,10 @@ UserDashboard::UserDashboard(
     , tokenRefreshThread(&UserDashboard::tokenRefreshTask, this)
 {
     ui->setupUi(this);
+
+    // Update username labels
     this->setWindowTitle(QString::fromStdString(username + "'s dashboard"));
+    ui->usernameLabel->setText(username.c_str());
 
     // Try load the files
     this->tryRetrieveFiles();
@@ -162,22 +165,20 @@ void UserDashboard::onFileDelete(const size_t fileID) {
 }
 
 void UserDashboard::logout() {
-    this->active = false;
-    // Notifying all the waiting threads
-    this->tokenRefreshCV.notify_all();
+    this->setActive(false);
+    
+    // Notifying waiting threads
+    this->tokenRefreshCV.notify_one();
+
     // Joining token refresh task thread
     this->tokenRefreshThread.join();
 }
 
 void UserDashboard::tokenRefreshTask() {
-    std::mutex tokenRefreshCVMutex;
-
-    while (this->active) {
+    while (this->getActive()) {
         // Wait with a condition variable
-        std::unique_lock lock(tokenRefreshCVMutex);
-        if (tokenRefreshCV.wait_for(lock, std::chrono::minutes(10), [this] {
-            return !this->active;
-        })) {
+        std::unique_lock lock(this->activeMutex);
+        if (tokenRefreshCV.wait_for(lock, std::chrono::minutes(10), [this] { return !this->active; })) {
             break; // End the task. User is no longer active
         }
 
@@ -187,7 +188,6 @@ void UserDashboard::tokenRefreshTask() {
             emit failure("Your session has expired, logging out.");
             break;
         }
-
     }
 }
 
@@ -248,4 +248,14 @@ void UserDashboard::tryRetrieveFiles() {
             QMessageBox::Ok
         );
     }
+}
+
+void UserDashboard::setActive(const bool value) {
+    std::unique_lock<std::mutex> lock(this->activeMutex);
+    this->active = value;
+}
+
+bool UserDashboard::getActive() {
+    std::unique_lock<std::mutex> lock(this->activeMutex);
+    return this->active;
 }

@@ -99,15 +99,28 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
     } else {
         // Login successful
 
+        // Try etrieve username
+        API::RequestResult result = API::Requests::GET(
+            std::getenv("ME_URL"),
+            response_json.at("access_token")
+        );
+
+        if (!result.ok) {
+            QMessageBox::critical(
+                this,
+                "Error",
+                QString::fromStdString(result.response.at("details").get<std::string>())
+            );
+            return;
+        }
+
         cURLpp::terminate(); // Cleanup cURLpp
         this->close(); // Close current window
-
-        // TODO: retrieve username
 
         // Proceed to player's personal shelter
         auto *shelter = new UserDashboard(
             API::TokenPair(response_json.at("access_token"), response_json.at("refresh_token")),
-            "unknown"
+            result.response.at("username").get<std::string>()
         );
         shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
         shelter->show();

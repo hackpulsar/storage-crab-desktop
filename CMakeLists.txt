@@ -77,10 +77,20 @@ target_link_libraries(${PROJECT_NAME}
             dotenv
 )
 
-target_include_directories( ${PROJECT_NAME}
+target_include_directories(${PROJECT_NAME}
         PUBLIC
             ${FORMS_DIR}
             ${SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             ${OPENSSL_INCLUDE_DIR}
+)
+
+# Custom command to copy .env file to the build directory
+# Executes only on successful build
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${CMAKE_SOURCE_DIR}/.env
+                ${CMAKE_CURRENT_BINARY_DIR}/.env
+        COMMENT "Copying .env to build directory"
 )
