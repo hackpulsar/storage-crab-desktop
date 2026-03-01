@@ -97,7 +97,7 @@ private:
     // Condition variable for token refresh loop
     std::condition_variable tokenRefreshCV;
 
-    // Hols all uploaded files widgets
+    // Holds all uploaded files widgets
     std::vector<UploadedFilePanel*> uploadedFilePanels;
 
 };
