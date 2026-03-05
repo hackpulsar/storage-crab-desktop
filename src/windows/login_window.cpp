@@ -106,11 +106,7 @@ void LoginWindow::handleLoginResponse(const std::string &response) {
         );
 
         if (!result.ok) {
-            QMessageBox::critical(
-                this,
-                "Error",
-                QString::fromStdString(result.response.at("details").get<std::string>())
-            );
+            QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
             return;
         }
 

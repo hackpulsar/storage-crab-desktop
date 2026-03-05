@@ -254,7 +254,7 @@ QPushButton:pressed {
 }</string>
        </property>
        <property name="text">
-        <string>Encrypt &amp; Upload</string>
+        <string>Encrypt &amp;&amp; Upload</string>
        </property>
       </widget>
      </item>

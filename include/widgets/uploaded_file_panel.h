@@ -23,6 +23,7 @@ public:
     ~UploadedFilePanel() override;
 
 signals:
+    void shareButtonPressed(size_t file_id);
     void downloadButtonPressed(const FileData &fileData);
     void deleteButtonPressed(size_t file_id);
 

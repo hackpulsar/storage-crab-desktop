@@ -34,6 +34,11 @@ UploadedFilePanel::UploadedFilePanel(
     ui->deleteButton->setIcon(QIcon("../assets/delete.png"));
 
     connect(
+        ui->shareButton, &QPushButton::clicked,
+        this, [this] { emit shareButtonPressed(this->fileData.id); }
+    );
+
+    connect(
         ui->downloadButton, &QPushButton::clicked,
         this, [this] { emit downloadButtonPressed(this->fileData); }
     );

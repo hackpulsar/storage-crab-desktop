@@ -48,6 +48,9 @@ private slots:
         const std::string &success_msg
     );
 
+    // Shares selected file
+    void onShareFile(size_t fileID);
+
     // Downloads selected file
     void onFileDownload(const FileData &fileData);
 

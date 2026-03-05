@@ -9,6 +9,7 @@
 #include "utils/styles_loader.hpp"
 #include "windows/upload_dialog.h"
 #include "windows/login_window.h"
+#include "windows/share_code_dialog.h"
 #include "widgets/uploaded_file_panel.h"
 #include "requests.hpp"
 #include "utils/downloads_folder.hpp"
@@ -125,11 +126,24 @@ void UserDashboard::onResponse(const API::RequestResult &result, const std::stri
         // Try reload files
         this->tryRetrieveFiles();
     } else {
-        QMessageBox::critical(
-            this,
-            "Error",
-            QString::fromStdString(result.response.at("details").get<std::string>())
-        );
+        QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
+    }
+}
+
+void UserDashboard::onShareFile(const size_t fileID) {
+    const API::RequestResult result = API::Requests::POST(
+        API::SHARE_URL_FOR(fileID),
+        nlohmann::json(),
+        this->tokenPair.getAccess()
+    );
+
+    if (result.ok) {
+        auto *dialog = new ShareCodeDialog(result.response.at("code").get<std::string>(), this);
+        dialog->setAttribute(Qt::WA_DeleteOnClose);
+        dialog->setWindowModality(Qt::WindowModal);
+        dialog->show();
+    } else {
+        QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
     }
 }
 
@@ -228,6 +242,10 @@ void UserDashboard::tryRetrieveFiles() {
                 ui->scrollArea
             );
 
+            connect(
+                panel, &UploadedFilePanel::shareButtonPressed,
+                this, &UserDashboard::onShareFile
+            );
             connect(
                 panel, &UploadedFilePanel::downloadButtonPressed,
                 this, &UserDashboard::onFileDownload

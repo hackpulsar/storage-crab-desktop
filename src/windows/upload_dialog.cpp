@@ -101,12 +101,7 @@ void UploadDialog::onUploadResult(const API::RequestResult &result, const std::s
         emit accepted();
     } else {
         this->resetUploadButton();
-
-        QMessageBox::critical(
-            this,
-            "Error",
-            QString::fromStdString(result.response.at("details").get<std::string>())
-        );
+        QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
     }
 }
 
