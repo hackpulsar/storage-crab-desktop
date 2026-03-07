@@ -19,6 +19,10 @@ inline auto SHARE_URL_FOR = [](const size_t fileID) {
     return std::getenv("SHARE_URL") + std::to_string(fileID) + "/";
 };
 
+inline auto DOWNLOAD_SHARED_URL_FOR = [](const std::string& code) {
+    return std::getenv("DOWNLOAD_SHARED_URL") + code + "/";
+};
+
 }
 
 #endif //API_SETTINGS_HPP

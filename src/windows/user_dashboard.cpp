@@ -10,9 +10,9 @@
 #include "windows/upload_dialog.h"
 #include "windows/login_window.h"
 #include "windows/share_code_dialog.h"
+#include "windows/download_shared_dialog.h"
 #include "widgets/uploaded_file_panel.h"
 #include "requests.hpp"
-#include "utils/downloads_folder.hpp"
 
 UserDashboard::UserDashboard(
     const API::TokenPair& tokenPair,
@@ -41,6 +41,10 @@ UserDashboard::UserDashboard(
     connect(
         ui->uploadButton, &QPushButton::clicked,
         this, &UserDashboard::onUploadButtonClicked
+    );
+    connect(
+        ui->downloadSharedButton, &QPushButton::clicked,
+        this, &UserDashboard::onDownloadSharedButtonClicked
     );
 
     connect(
@@ -106,6 +110,13 @@ void UserDashboard::onUploadButtonClicked() {
     );
 }
 
+void UserDashboard::onDownloadSharedButtonClicked() {
+    auto *dialog = new DownloadSharedDialog(this->tokenPair, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::WindowModal);
+    dialog->show();
+}
+
 void UserDashboard::onFailure(const std::string& message) {
     QMessageBox::critical(
         this,
@@ -148,20 +159,17 @@ void UserDashboard::onShareFile(const size_t fileID) {
 }
 
 void UserDashboard::onFileDownload(const FileData &fileData) {
-    std::string filepath = Utils::GetDownloadsFolder();
+    const std::string destinationDir = QFileDialog::getExistingDirectory(
+        this,
+        "Select destination folder",
+        QDir::homePath()
+    ).toStdString();
 
-    // Windows uses wierd '\\' instead of chad '/'
-#ifdef _WIN32
-    filepath += "\\";
-#else
-    filepath += "/";
-#endif
-
-    filepath += fileData.name;
+    if (destinationDir.empty()) return;
 
     const API::RequestResult result = API::Requests::GET_DOWNLOAD(
         API::DOWNLOAD_URL_FOR(fileData.id),
-        filepath,
+        destinationDir,
         this->tokenPair.getAccess()
     );
 

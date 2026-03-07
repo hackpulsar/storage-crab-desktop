@@ -12,10 +12,18 @@ Q_OBJECT
 
 public:
     ShareCodeDialog(std::string code, QWidget* parent = nullptr);
-    ~ShareCodeDialog() override = default;
+    ~ShareCodeDialog() override;
 
 private:
-    Ui::ShareCodeDialog* ui;
+    std::unique_ptr<Ui::ShareCodeDialog> ui;
+
+    std::string code;
+
+    QTimer* copyTimer;
+    QIcon copyIcon, copiedIcon;
+
+private slots:
+    void onCopyClicked();
 
 };
 
