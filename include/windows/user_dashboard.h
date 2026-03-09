@@ -30,23 +30,21 @@ public:
     ~UserDashboard() override;
 
 private slots:
-    // Handles Logout button click signal.
-    // Logs user out.
     void onLogoutButtonClicked();
 
-    // Handles file upload.
-    // Opens file dialog, then upload settings window.
     void onUploadButtonClicked();
 
-    // Handles failure.
-    // Shows message box and logs user out.
+    void onDownloadSharedButtonClicked();
+
     void onFailure(const std::string& message);
 
-    // Handles server response.
     void onResponse(
         const API::RequestResult &result,
         const std::string &success_msg
     );
+
+    // Shares selected file
+    void onShareFile(size_t fileID);
 
     // Downloads selected file
     void onFileDownload(const FileData &fileData);
@@ -97,7 +95,7 @@ private:
     // Condition variable for token refresh loop
     std::condition_variable tokenRefreshCV;
 
-    // Hols all uploaded files widgets
+    // Holds all uploaded files widgets
     std::vector<UploadedFilePanel*> uploadedFilePanels;
 
 };

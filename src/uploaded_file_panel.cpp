@@ -20,7 +20,7 @@ UploadedFilePanel::UploadedFilePanel(
     pal.setColor(
         QPalette::Window,
         Utils::isDarkMode(this) ?
-            QColor::fromRgb(40, 40, 40) : QColor::fromRgb(211, 211, 211)
+            QColor::fromRgb(40, 40, 40) : QColor::fromRgb(239, 239, 239)
     );
     setAutoFillBackground(true);
     setPalette(pal);
@@ -28,6 +28,15 @@ UploadedFilePanel::UploadedFilePanel(
     ui->sizeLabel->setText(QString::fromStdString(
         std::to_string(fileData.size / (1000.f * 1000.f)) + "mb"
     ));
+
+    ui->shareButton->setIcon(QIcon("../assets/share.png"));
+    ui->downloadButton->setIcon(QIcon("../assets/download.png"));
+    ui->deleteButton->setIcon(QIcon("../assets/delete.png"));
+
+    connect(
+        ui->shareButton, &QPushButton::clicked,
+        this, [this] { emit shareButtonPressed(this->fileData.id); }
+    );
 
     connect(
         ui->downloadButton, &QPushButton::clicked,

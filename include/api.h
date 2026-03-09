@@ -5,14 +5,22 @@
 
 namespace API {
 
-// URL builder for downloading files
+// URL builder helper functions
+
 inline auto DOWNLOAD_URL_FOR = [](const size_t fileID) {
     return std::getenv("DOWNLOAD_URL") + std::to_string(fileID) + "/";
 };
 
-// URL builder for deleting files
 inline auto DELETE_URL_FOR = [](const size_t fileID) {
     return std::getenv("DELETE_URL") + std::to_string(fileID) + "/";
+};
+
+inline auto SHARE_URL_FOR = [](const size_t fileID) {
+    return std::getenv("SHARE_URL") + std::to_string(fileID) + "/";
+};
+
+inline auto DOWNLOAD_SHARED_URL_FOR = [](const std::string& code) {
+    return std::getenv("DOWNLOAD_SHARED_URL") + code + "/";
 };
 
 }

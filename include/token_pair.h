@@ -15,6 +15,15 @@ struct RequestResult {
     static RequestResult success(const nlohmann::json &body) { return RequestResult{true, body}; }
     static RequestResult success() { return RequestResult{true, nlohmann::json()}; }
     static RequestResult error(const nlohmann::json &body) { return RequestResult{false, body}; }
+
+    // @returns Error details string if the request was not successful,
+    // otherwise returns an empty string
+    std::string extractErrorDetails() const { 
+        if (!ok)
+            return response.at("details").get<std::string>();
+        return "";
+    }
+
 };
 
 // Represents an Access/Refresh token pair.

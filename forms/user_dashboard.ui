@@ -159,7 +159,7 @@ QPushButton:pressed {
          <x>0</x>
          <y>0</y>
          <width>774</width>
-         <height>428</height>
+         <height>430</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -185,9 +185,14 @@ QPushButton:pressed {
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="uploadButton">
-      <property name="styleSheet">
-       <string notr="true">QPushButton {
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="uploadButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
     color: white;
     font-size: 24pt;
     background-color: #62BE63;
@@ -202,11 +207,61 @@ QPushButton:hover {
 QPushButton:pressed {
     background-color: #4C8F4D;
 }</string>
-      </property>
-      <property name="text">
-       <string>Upload</string>
-      </property>
-     </widget>
+        </property>
+        <property name="text">
+         <string>Upload</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="decryptButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+    color: white;
+    font-size: 24pt;
+    background-color: #62BE63;
+    border: 0;
+    min-width: 200px;
+    min-height: 40px;
+    padding: 0 10px;
+}
+QPushButton:hover {
+    background-color: #58A759;
+}
+QPushButton:pressed {
+    background-color: #4C8F4D;
+}</string>
+        </property>
+        <property name="text">
+         <string>Decrypt</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="downloadSharedButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+    color: white;
+    font-size: 24pt;
+    background-color: #2684FF;
+    border: 0;
+    min-width: 200px;
+    min-height: 40px;
+    padding: 0 10px;
+}
+QPushButton:hover {
+    background-color: #2276E4;
+}
+QPushButton:pressed {
+    background-color: #2065BF;
+}</string>
+        </property>
+        <property name="text">
+         <string>Download shared</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
