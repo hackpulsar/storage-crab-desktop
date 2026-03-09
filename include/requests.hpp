@@ -123,7 +123,6 @@ inline RequestResult GET_DOWNLOAD(
         request.setOpt(curlpp::options::HeaderFunction([&](char *data, size_t size, size_t nmemb) {
             std::string header(data, size * nmemb);
             
-            // TODO: header name in lowercase, ar we ussing http2?
             if (header.find("content-disposition") != std::string::npos) {
                 auto pos = header.find("filename=\"");
                 if (pos != std::string::npos) {
