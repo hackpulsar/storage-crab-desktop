@@ -1,21 +1,17 @@
 #include "windows/login_window.h"
 #include "ui_login_window.h"
 
-#include <curlpp/cURLpp.hpp>
-#include <curlpp/Easy.hpp>
-#include <curlpp/Options.hpp>
-#include <nlohmann/json.hpp>
-
 #include <QMessageBox>
-#include <QThread>
 
-#include "api.h"
-#include "requests.hpp"
+#include <memory>
+
+#include "api/api.h"
+#include "api/api_dispatcher.hpp"
+#include "watch_future.hpp"
 #include "windows/user_dashboard.h"
-#include "utils/styles_loader.hpp"
 
 LoginWindow::LoginWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::LoginWindow)
+    : QMainWindow(parent), ui(std::make_unique<Ui::LoginWindow>())
 {
     ui->setupUi(this);
 
@@ -28,31 +24,10 @@ LoginWindow::LoginWindow(QWidget *parent)
     loadingAnimation = new QMovie(this);
     loadingAnimation->setFileName("../assets/loading.gif");
 
-    // Connecting login button release signal to a custom login handler
     connect(ui->loginButton, &QPushButton::clicked, this, &LoginWindow::onLoginButtonClicked);
-
-    // Connecting login response receive signal to a handler
-    connect(
-        this, &LoginWindow::loginResponseReceived,
-        this, &LoginWindow::handleLoginResponse
-    );
-
-    // Connect login error to handler
-    connect(
-        this, &LoginWindow::loginError,
-        this, [this](const std::string& title, const std::string& message) {
-            qDebug() << "here";
-            this->resetLoginButton();
-            QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(message));
-    });
-
-    // Initialise cURL
-    cURLpp::initialize();
 }
 
-LoginWindow::~LoginWindow() {
-    delete ui;
-}
+LoginWindow::~LoginWindow() = default;
 
 void LoginWindow::onLoginButtonClicked() {
     // Validate input
@@ -68,59 +43,36 @@ void LoginWindow::onLoginButtonClicked() {
     });
     loadingAnimation->start();
 
-    QThread* loginRequestThread = QThread::create([this] {
-        API::RequestResult result = API::Requests::POST(
-            std::getenv("TOKEN_OBTAIN_URL"),
-            {
-                {"email", ui->emailLineEdit->text().toStdString()},
-                {"password_hash", ui->passwordLineEdit->text().toStdString()},
-            }
-        );
-
-        // Emitting a signal indicating that the response has been received
-        emit loginResponseReceived(result.response.dump());
-    });
-
-    // When the thread is finished, it is going to get deleted safely
-    connect(loginRequestThread, &QThread::finished, loginRequestThread, &QThread::deleteLater);
-    loginRequestThread->start();
+    const std::string email = ui->emailLineEdit->text().toStdString();
+    const std::string pass_hash = ui->passwordLineEdit->text().toStdString();
+    watchFuture(
+        this, ApiDispatcher::instance().login(email, pass_hash),
+        [this](const API::RequestResult& response) { this->onLoginSuccessfull(response); },
+        [this](const API::RequestResult& response) {
+            ui->errorLabel->setText(QString::fromStdString(response.extractErrorDetails()));
+            this->resetLoginButton();
+        }
+    );
 }
 
-void LoginWindow::handleLoginResponse(const std::string &response) {
-    // Parse response string
-    const auto response_json = nlohmann::json::parse(response);
+void LoginWindow::onLoginSuccessfull(const API::RequestResult& response) {
+    ApiDispatcher::instance().storeTokens(response.body.at("access_token"), response.body.at("refresh_token"));
 
-    // Validate the response
-    if (response_json.contains("details")) {
-        // Fail
-        ui->errorLabel->setText(QString::fromStdString(response_json.at("details").get<std::string>()));
-        this->resetLoginButton();
+    // Try retrieve username
+    watchFuture(
+        this, ApiDispatcher::instance().me(),
+        [this](const API::RequestResult& response) {
+            this->close(); // Close current window
 
-    } else {
-        // Login successful
-
-        // Try etrieve username
-        API::RequestResult result = API::Requests::GET(
-            std::getenv("ME_URL"),
-            response_json.at("access_token")
-        );
-
-        if (!result.ok) {
-            QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
-            return;
+            // Proceed to player's personal shelter
+            auto *shelter = new UserDashboard(response.body.at("username").get<std::string>());
+            shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
+            shelter->show();
+        },
+        [this](const API::RequestResult& response) {
+            QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
         }
-
-        cURLpp::terminate(); // Cleanup cURLpp
-        this->close(); // Close current window
-
-        // Proceed to player's personal shelter
-        auto *shelter = new UserDashboard(
-            API::TokenPair(response_json.at("access_token"), response_json.at("refresh_token")),
-            result.response.at("username").get<std::string>()
-        );
-        shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
-        shelter->show();
-    }
+    );
 }
 
 void LoginWindow::resetLoginButton() {

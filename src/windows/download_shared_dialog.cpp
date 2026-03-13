@@ -5,12 +5,13 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QThreadPool>
 
-#include "api.h"
-#include "requests.hpp"
+#include "api/api_dispatcher.hpp"
+#include "watch_future.hpp"
 
-DownloadSharedDialog::DownloadSharedDialog(const API::TokenPair& tokenPair, QWidget* parent) 
-    : QDialog(parent), ui(std::make_unique<Ui::DownloadSharedDialog>()), tokenPair(tokenPair)
+DownloadSharedDialog::DownloadSharedDialog(QWidget* parent) 
+    : QDialog(parent), ui(std::make_unique<Ui::DownloadSharedDialog>())
 {
     ui->setupUi(this);
 
@@ -23,6 +24,11 @@ DownloadSharedDialog::DownloadSharedDialog(const API::TokenPair& tokenPair, QWid
 DownloadSharedDialog::~DownloadSharedDialog() = default;
 
 void DownloadSharedDialog::onDownloadButtonClicked() {
+    if (ui->codeLineEdit->text().trimmed().isEmpty()) {
+        QMessageBox::critical(this, "Error", "Please fill all the fields");
+        return;
+    }
+
     ui->downloadButton->setEnabled(false);
 
     const std::string destinationDir = QFileDialog::getExistingDirectory(
@@ -33,17 +39,15 @@ void DownloadSharedDialog::onDownloadButtonClicked() {
 
     if (destinationDir.empty()) return;
 
-    const API::RequestResult result = API::Requests::GET_DOWNLOAD(
-        API::DOWNLOAD_SHARED_URL_FOR(ui->codeLineEdit->text().toStdString()),
-        destinationDir,
-        this->tokenPair.getAccess()
+    watchFuture(
+        this, ApiDispatcher::instance().downloadSharedFile(ui->codeLineEdit->text().toStdString(), destinationDir),
+        [this](const API::RequestResult&) {
+            QMessageBox::information(this, "Sucess!", "File has been downloaded successfully!");
+            this->close();
+        },
+        [this](const API::RequestResult& response) {
+            QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
+            ui->downloadButton->setEnabled(true);
+        }
     );
-
-    if (result.ok) {
-        QMessageBox::information(this, "Sucess!", "File has been downloaded successfully!");
-        this->close();
-    } else {
-        QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
-        ui->downloadButton->setEnabled(true);
-    }
 }

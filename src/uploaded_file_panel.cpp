@@ -1,9 +1,8 @@
 #include "widgets/uploaded_file_panel.h"
 #include "ui_uploaded_file_panel.h"
 
-#include "utils/styles_loader.hpp"
 #include "utils/dark_mode.hpp"
-#include "file_data.hpp"
+#include "api/file_data.hpp"
 
 UploadedFilePanel::UploadedFilePanel(
     const FileData &fileData,

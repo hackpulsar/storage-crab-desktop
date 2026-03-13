@@ -2,13 +2,9 @@
 #define MAIN_WINDOW_H
 
 #include <QMainWindow>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QLabel>
-#include <QtWidgets/QBoxLayout>
-#include <QtWidgets/QPushButton>
-#include <QtWidgets/QLineEdit>
 #include <QMovie>
 
+#include "api/request_result.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class LoginWindow; }
@@ -22,26 +18,16 @@ public:
     ~LoginWindow() override;
 
 private slots:
-    // Handles user login.
-    // Closes login window and proceeds to player's shelter on success.
     void onLoginButtonClicked();
 
 private:
-    // Login response handler
-    void handleLoginResponse(const std::string& response);
+    void onLoginSuccessfull(const API::RequestResult& response);
 
-    // Resets login button
     void resetLoginButton();
 
-    Ui::LoginWindow *ui;
+    std::unique_ptr<Ui::LoginWindow> ui;
 
-    // Loading animation (GIF) for a login button
     QMovie *loadingAnimation;
-
-signals:
-    void loginResponseReceived(const std::string& response);
-
-    void loginError(const std::string& title, const std::string& message);
 
 };
 

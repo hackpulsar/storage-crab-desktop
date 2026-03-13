@@ -1,7 +1,5 @@
 #ifndef ALGORITHM_TYPES_H
 #define ALGORITHM_TYPES_H
-#include <openssl/evp.h>
-#include <openssl/types.h>
 
 namespace Cryptography {
 

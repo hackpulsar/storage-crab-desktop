@@ -5,25 +5,17 @@
 #include <QFileDialog>
 #include <QThread>
 
-#include "api.h"
-#include "utils/styles_loader.hpp"
 #include "windows/upload_dialog.h"
 #include "windows/login_window.h"
 #include "windows/share_code_dialog.h"
 #include "windows/download_shared_dialog.h"
 #include "widgets/uploaded_file_panel.h"
-#include "requests.hpp"
 
-UserDashboard::UserDashboard(
-    const API::TokenPair& tokenPair,
-    const std::string& username,
-    QWidget *parent
-)
-    : QMainWindow(parent)
-    , ui(new Ui::UserDashboard)
-    , tokenPair(tokenPair.getAccess(), tokenPair.getRefresh())
-    , active(true)
-    , tokenRefreshThread(&UserDashboard::tokenRefreshTask, this)
+#include "api/api_dispatcher.hpp"
+#include "watch_future.hpp"
+
+UserDashboard::UserDashboard(const std::string& username, QWidget* parent)
+    : QMainWindow(parent), ui(new Ui::UserDashboard)
 {
     ui->setupUi(this);
 
@@ -31,7 +23,6 @@ UserDashboard::UserDashboard(
     this->setWindowTitle(QString::fromStdString(username + "'s dashboard"));
     ui->usernameLabel->setText(username.c_str());
 
-    // Try load the files
     this->tryRetrieveFiles();
 
     connect(
@@ -48,12 +39,11 @@ UserDashboard::UserDashboard(
     );
 
     connect(
-        this, &UserDashboard::failure,
-        this, &UserDashboard::onFailure
-    );
-    connect(
-        this, &UserDashboard::response,
-        this, &UserDashboard::onResponse
+        &ApiDispatcher::instance(), &ApiDispatcher::sessionExpired,
+        this, [this] {
+            QMessageBox::critical(this, "Error", "Your session has expired");
+            this->close();
+        }
     );
 }
 
@@ -64,18 +54,13 @@ UserDashboard::~UserDashboard() {
 void UserDashboard::onLogoutButtonClicked() {
     // Ask user if sure
     const auto reply = QMessageBox::question(
-        this,
-        "Logout",
+        this, "Logout",
         "Are you sure you want to logout?",
         QMessageBox::Yes | QMessageBox::No
     );
 
     switch (reply) {
-        case QMessageBox::Yes: {
-            // Logout and close current window
-            this->close();
-            break;
-        }
+        case QMessageBox::Yes: this->close();
         default: break;
     }
 }
@@ -90,7 +75,7 @@ void UserDashboard::onUploadButtonClicked() {
 
     if (filePath.empty()) return;
 
-    auto *dialog = new UploadDialog(filePath, tokenPair.getAccess(), this);
+    auto *dialog = new UploadDialog(filePath, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::WindowModal);
     dialog->show();
@@ -111,51 +96,25 @@ void UserDashboard::onUploadButtonClicked() {
 }
 
 void UserDashboard::onDownloadSharedButtonClicked() {
-    auto *dialog = new DownloadSharedDialog(this->tokenPair, this);
+    auto *dialog = new DownloadSharedDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::WindowModal);
     dialog->show();
 }
 
-void UserDashboard::onFailure(const std::string& message) {
-    QMessageBox::critical(
-        this,
-        "Error",
-        (std::string("Something went wrong.\nDetails: ") + std::string(message)).c_str()
-    );
-    this->close();
-}
-
-void UserDashboard::onResponse(const API::RequestResult &result, const std::string &success_msg) {
-    if (result.ok) {
-        QMessageBox::information(
-            this,
-            "Success",
-            QString::fromStdString(success_msg)
-        );
-
-        // Try reload files
-        this->tryRetrieveFiles();
-    } else {
-        QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
-    }
-}
-
 void UserDashboard::onShareFile(const size_t fileID) {
-    const API::RequestResult result = API::Requests::POST(
-        API::SHARE_URL_FOR(fileID),
-        nlohmann::json(),
-        this->tokenPair.getAccess()
+    watchFuture(
+        this, ApiDispatcher::instance().shareFile(fileID),
+        [this](const API::RequestResult& response) {
+            auto *dialog = new ShareCodeDialog(response.body.at("code").get<std::string>(), this);
+            dialog->setAttribute(Qt::WA_DeleteOnClose);
+            dialog->setWindowModality(Qt::WindowModal);
+            dialog->show();
+        },
+        [this](const API::RequestResult& response) {
+            QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
+        }
     );
-
-    if (result.ok) {
-        auto *dialog = new ShareCodeDialog(result.response.at("code").get<std::string>(), this);
-        dialog->setAttribute(Qt::WA_DeleteOnClose);
-        dialog->setWindowModality(Qt::WindowModal);
-        dialog->show();
-    } else {
-        QMessageBox::critical(this, "Error", QString::fromStdString(result.extractErrorDetails()));
-    }
 }
 
 void UserDashboard::onFileDownload(const FileData &fileData) {
@@ -167,56 +126,32 @@ void UserDashboard::onFileDownload(const FileData &fileData) {
 
     if (destinationDir.empty()) return;
 
-    const API::RequestResult result = API::Requests::GET_DOWNLOAD(
-        API::DOWNLOAD_URL_FOR(fileData.id),
-        destinationDir,
-        this->tokenPair.getAccess()
+    watchFuture(
+        this, ApiDispatcher::instance().downloadFile(fileData.id, destinationDir),
+        [this](const API::RequestResult& response) {
+            QMessageBox::information(this, "Success", QString::fromStdString("File downloaded sucessfully!"));
+            this->tryRetrieveFiles();
+        },
+        [this](const API::RequestResult& response) { 
+            QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
+        }
     );
-
-    emit response(result, "Download successful!");
 }
 
 void UserDashboard::onFileDelete(const size_t fileID) {
-    const API::RequestResult result = API::Requests::POST(
-        API::DELETE_URL_FOR(fileID),
-        nlohmann::json(),
-        this->tokenPair.getAccess()
+    watchFuture(
+        this, ApiDispatcher::instance().deleteFile(fileID),
+        [this](const API::RequestResult& response) {
+            QMessageBox::information(this, "Success", QString::fromStdString("File deleted sucessfully!"));
+            this->tryRetrieveFiles();
+        },
+        [this](const API::RequestResult& response) { 
+            QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
+        }
     );
-
-    emit response(result, "Delete successful!");
-}
-
-void UserDashboard::logout() {
-    this->setActive(false);
-    
-    // Notifying waiting threads
-    this->tokenRefreshCV.notify_one();
-
-    // Joining token refresh task thread
-    this->tokenRefreshThread.join();
-}
-
-void UserDashboard::tokenRefreshTask() {
-    while (this->getActive()) {
-        // Wait with a condition variable
-        std::unique_lock lock(this->activeMutex);
-        if (tokenRefreshCV.wait_for(lock, std::chrono::minutes(10), [this] { return !this->active; })) {
-            break; // End the task. User is no longer active
-        }
-
-        // Handle failure
-        auto result = this->tokenPair.refresh();
-        if (!result.ok) {
-            emit failure("Your session has expired, logging out.");
-            break;
-        }
-    }
 }
 
 void UserDashboard::closeEvent(QCloseEvent *event) {
-    // Logging the user out
-    this->logout();
-
     // Back to main window
     auto *loginWindow = new LoginWindow;
     loginWindow->setAttribute(Qt::WA_DeleteOnClose);
@@ -226,62 +161,46 @@ void UserDashboard::closeEvent(QCloseEvent *event) {
 }
 
 void UserDashboard::tryRetrieveFiles() {
-    API::RequestResult result = API::Requests::GET(
-        std::getenv("GET_FILES_URL"),
-        this->tokenPair.getAccess()
-    );
+    watchFuture(
+        this, ApiDispatcher::instance().getFiles(),
+        [this](const API::RequestResult& response) {
+            // Removing all the previously loaded files
+            for (auto* panel : uploadedFilePanels) {
+                ui->middlePanelLayout->removeWidget(panel);
+                delete panel;
+            }
+            uploadedFilePanels.clear();
 
-    // Removing all the previously loaded files
-    for (auto* panel : uploadedFilePanels) {
-        ui->middlePanelLayout->removeWidget(panel);
-        delete panel;
-    }
-    uploadedFilePanels.clear();
+            for (const auto& file_data : response.body) {
+                auto panel = new UploadedFilePanel(
+                    FileData {
+                        file_data.at("filename"),
+                        file_data.at("path"),
+                        file_data.at("size").get<size_t>(),
+                        file_data.at("id").get<size_t>(),
+                    },
+                    ui->scrollArea
+                );
 
-    if (result.ok) {
-        for (const auto& file_data : result.response) {
-            auto panel = new UploadedFilePanel(
-                FileData {
-                    file_data.at("filename"),
-                    file_data.at("path"),
-                    file_data.at("size").get<size_t>(),
-                    file_data.at("id").get<size_t>(),
-                },
-                ui->scrollArea
-            );
+                connect(
+                    panel, &UploadedFilePanel::shareButtonPressed,
+                    this, &UserDashboard::onShareFile
+                );
+                connect(
+                    panel, &UploadedFilePanel::downloadButtonPressed,
+                    this, &UserDashboard::onFileDownload
+                );
+                connect(
+                    panel, &UploadedFilePanel::deleteButtonPressed,
+                    this, &UserDashboard::onFileDelete
+                );
 
-            connect(
-                panel, &UploadedFilePanel::shareButtonPressed,
-                this, &UserDashboard::onShareFile
-            );
-            connect(
-                panel, &UploadedFilePanel::downloadButtonPressed,
-                this, &UserDashboard::onFileDownload
-            );
-            connect(
-                panel, &UploadedFilePanel::deleteButtonPressed,
-                this, &UserDashboard::onFileDelete
-            );
-
-            uploadedFilePanels.push_back(panel);
-            ui->middlePanelLayout->insertWidget(ui->middlePanelLayout->count() - 1, uploadedFilePanels.back());
+                uploadedFilePanels.push_back(panel);
+                ui->middlePanelLayout->insertWidget(ui->middlePanelLayout->count() - 1, uploadedFilePanels.back());
+            }
+        },
+        [this](const API::RequestResult& response) {
+            QMessageBox::critical(this, "Error", "Couldn't retrieve files.", QMessageBox::Ok);
         }
-    } else {
-        QMessageBox::critical(
-            this,
-            "Error",
-            "Couldn't retrieve files.",
-            QMessageBox::Ok
-        );
-    }
-}
-
-void UserDashboard::setActive(const bool value) {
-    std::unique_lock<std::mutex> lock(this->activeMutex);
-    this->active = value;
-}
-
-bool UserDashboard::getActive() {
-    std::unique_lock<std::mutex> lock(this->activeMutex);
-    return this->active;
+    );
 }

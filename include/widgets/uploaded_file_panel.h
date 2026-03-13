@@ -6,7 +6,7 @@
 #include <QLabel>
 #include <QPushButton>
 
-#include "file_data.hpp"
+#include "api/file_data.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class UploadedFilePanel; }

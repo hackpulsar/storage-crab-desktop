@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "token_pair.h"
+#include "api/token_pair.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class DownloadSharedDialog; }
@@ -13,13 +13,11 @@ class DownloadSharedDialog final : public QDialog {
 Q_OBJECT
 
 public:
-    DownloadSharedDialog(const API::TokenPair& tokenPair, QWidget* parent = nullptr);
+    DownloadSharedDialog(QWidget* parent = nullptr);
     ~DownloadSharedDialog() override;
 
 private:
     std::unique_ptr<Ui::DownloadSharedDialog> ui;
-
-    const API::TokenPair& tokenPair;
 
 private slots:
     void onDownloadButtonClicked();
