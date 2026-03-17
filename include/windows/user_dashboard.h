@@ -11,7 +11,7 @@
 #include <thread>
 #include <nlohmann/json_fwd.hpp>
 
-#include "token_pair.h"
+#include "api/token_pair.h"
 #include "widgets/uploaded_file_panel.h"
 
 QT_BEGIN_NAMESPACE
@@ -22,11 +22,7 @@ class UserDashboard final : public QMainWindow {
 Q_OBJECT
 
 public:
-    UserDashboard(
-        const API::TokenPair& tokenPair,
-        const std::string& username,
-        QWidget *parent = nullptr
-    );
+    UserDashboard(const std::string& username, QWidget *parent = nullptr);
     ~UserDashboard() override;
 
 private slots:
@@ -36,66 +32,19 @@ private slots:
 
     void onDownloadSharedButtonClicked();
 
-    void onFailure(const std::string& message);
-
-    void onResponse(
-        const API::RequestResult &result,
-        const std::string &success_msg
-    );
-
-    // Shares selected file
     void onShareFile(size_t fileID);
 
-    // Downloads selected file
     void onFileDownload(const FileData &fileData);
 
-    // Deletes selected file
     void onFileDelete(size_t fileID);
 
-signals:
-    void failure(const std::string& message);
-
-    void response(const API::RequestResult &result, const std::string &success_msg);
-
 private:
-    // Logs user out
-    void logout();
-
-    // Background task for refreshing a token
-    void tokenRefreshTask();
-
-    // Overrides base window close event
     void closeEvent(QCloseEvent *event) override;
 
-    // Retrieves files related to current user from remote storage
     void tryRetrieveFiles();
-
-    // Sets active flag, with mutex
-    void setActive(bool value);
-
-    // Returns active flag, with mutex
-    bool getActive();
 
     Ui::UserDashboard *ui;
 
-    // Token pair
-    API::TokenPair tokenPair;
-
-    // A flag indicating whether the user is active or not.
-    // Used in multiple threads.
-    bool active;
-
-    // Thread for token refresh background job
-    std::thread tokenRefreshThread;
-
-    // Mutex for accessing active flag (even though it is atomic)
-    // Avoids "late wakeups"
-    std::mutex activeMutex;
-    
-    // Condition variable for token refresh loop
-    std::condition_variable tokenRefreshCV;
-
-    // Holds all uploaded files widgets
     std::vector<UploadedFilePanel*> uploadedFilePanels;
 
 };

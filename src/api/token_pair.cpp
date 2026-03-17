@@ -1,11 +1,11 @@
-#include "token_pair.h"
+#include "api/token_pair.h"
 
 #include <sstream>
 #include <curlpp/Options.hpp>
 #include <nlohmann/json.hpp>
 
-#include "api.h"
-#include "requests.hpp"
+#include "api/api.h"
+#include "api/requests.hpp"
 
 namespace API {
 
@@ -14,19 +14,10 @@ TokenPair::TokenPair(std::string access, std::string refresh)
     , refreshToken(std::move(refresh))
 { }
 
-RequestResult TokenPair::refresh() {
-    RequestResult result = Requests::POST(
-        std::getenv("TOKEN_REFRESH_URL"),
-        {{"refresh_token", this->getRefresh()}}
-    );
-
-    if (result.ok) {
-        this->setAccess(result.response.at("access_token").get<std::string>());
-        this->setRefresh(result.response.at("refresh_token").get<std::string>());
-        std::cout << "yoo: " << this->getRefresh() << std::endl;
-    }
-
-    return result;
+void TokenPair::store(const std::string& access, const std::string& refresh) {
+    std::lock_guard lock(this->mutex);
+    this->accessToken = access;
+    this->refreshToken  = refresh;
 }
 
 std::string TokenPair::getAccess() const {

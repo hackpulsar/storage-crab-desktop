@@ -1,12 +1,14 @@
 #ifndef REQUESTS_HPP
 #define REQUESTS_HPP
 
+#include <fstream>
+#include <functional>
+
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 #include <curlpp/Infos.hpp>
-#include <qdebug.h>
-#include <fstream>
 
+#include <QDebug>
 #include <QDir>
 
 #include "token_pair.h"
@@ -105,6 +107,7 @@ inline RequestResult POST_UPLOAD(
     }
 }
 
+// Downloads the file to destination on successfull request
 inline RequestResult GET_DOWNLOAD(
     const std::string &url,
     const std::string &destination,
