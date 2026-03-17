@@ -37,7 +37,10 @@ inline RequestResult POST(
         // Adding the body and its size to request
         request.setOpt(curlpp::options::PostFields(body.dump()));
         request.setOpt(curlpp::options::PostFieldSize(static_cast<long>(body.dump().length())));
-        request.setOpt(cURLpp::options::WriteStream(&responseStream));
+        request.setOpt(curlpp::options::WriteStream(&responseStream));
+
+        // Timeout
+        request.setOpt(curlpp::options::Timeout(20L)); // 20 seconds
 
         // Performing the request
         request.perform();
@@ -47,15 +50,16 @@ inline RequestResult POST(
             return RequestResult::success();
 
         const nlohmann::json response = nlohmann::json::parse(responseStream.str());
+        
         // Handle failure
         if (response.contains("details"))
             return RequestResult::error(response);
 
         return RequestResult::success(response);
-    } catch (cURLpp::RuntimeError&) {
-        return RequestResult::error("Runtime error");
-    } catch (cURLpp::LogicError&) {
-        return RequestResult::error("Logic error");
+    } catch (cURLpp::RuntimeError& e) {
+        return RequestResult::error_msg("Request timed out");
+    } catch (cURLpp::LogicError& e) {
+        return RequestResult::error_msg("Logic error: " + std::string(e.what()));
     }
 }
 
@@ -99,11 +103,12 @@ inline RequestResult POST_UPLOAD(
         // Fail
         if (response.contains("details"))
             return RequestResult::error(response);
+
         return RequestResult::success(response);
-    } catch (cURLpp::RuntimeError&) {
-        return RequestResult::error("Runtime error");
-    } catch (cURLpp::LogicError&) {
-        return RequestResult::error("Logic error");
+    } catch (cURLpp::RuntimeError& e) {
+        return RequestResult::error_msg("Request timed out");
+    } catch (cURLpp::LogicError& e) {
+        return RequestResult::error_msg("Logic error: " + std::string(e.what()));
     }
 }
 
@@ -117,19 +122,17 @@ inline RequestResult GET_DOWNLOAD(
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
 
-        std::ostringstream responseStream;
-
-        request.setOpt(cURLpp::options::WriteStream(&responseStream));
-
-        // Reading file details
+        std::string responseBody;
         std::string filename;
+
+        // Get filename from headers
         request.setOpt(curlpp::options::HeaderFunction([&](char *data, size_t size, size_t nmemb) {
             std::string header(data, size * nmemb);
             
             if (header.find("content-disposition") != std::string::npos) {
                 auto pos = header.find("filename=\"");
                 if (pos != std::string::npos) {
-                    pos += 10; // skip 'filename="'
+                    pos += 10; // skipping 'filename="'
                     auto end = header.find("\"", pos);
                     filename = header.substr(pos, end - pos);
                 }
@@ -137,42 +140,39 @@ inline RequestResult GET_DOWNLOAD(
             return size * nmemb;
         }));
 
-        // File download function
-        std::ofstream file;
+        // Capture response body
         request.setOpt(cURLpp::options::WriteFunction([&](char *data, size_t size, size_t nmemb) {
-            size_t written = size * nmemb;
-            
-            // Open file lazily once we have the filename from headers
-            if (!file.is_open()) {
-                std::string path = QDir::toNativeSeparators(
-                    QDir::cleanPath(QString::fromStdString(destination + "/" + filename))
-                ).toStdString();
-                file.open(path, std::ios::binary);
-                if (!file) throw cURLpp::RuntimeError("Error writing to a file");
-            }
-            
-            file.write(data, written);
-            return written;
+            responseBody.append(data, size * nmemb);
+            return size * nmemb;
         }));
 
-        // Add authorization field if access token is provided
         if (!access_token.empty())
             request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
 
-        // Performing the request
         request.perform();
 
         int responseCode = cURLpp::infos::ResponseCode::get(request);
 
-        if (responseCode == 200)
-            return RequestResult::success();
+        if (responseCode != 200) {
+            // Parse error response
+            const nlohmann::json response = nlohmann::json::parse(responseBody);
+            return RequestResult::error(response);
+        }
 
-        const nlohmann::json response = nlohmann::json::parse(responseStream.str());
-        return RequestResult::error(response);
+        // Write file
+        std::string path = QDir::toNativeSeparators(
+            QDir::cleanPath(QString::fromStdString(destination + "/" + filename))
+        ).toStdString();
+        std::ofstream file(path, std::ios::binary);
+        file.write(responseBody.c_str(), responseBody.size());
+        file.close();
+
+        return RequestResult::success();
+
     } catch (cURLpp::RuntimeError& e) {
-        return RequestResult::error(nlohmann::json{{"details", e.what()}});
-    } catch (cURLpp::LogicError& e) {
-        return RequestResult::error(nlohmann::json{{"details", e.what()}});
+        return RequestResult::error_msg("Request failed: " + std::string(e.what()));
+    } catch (const std::exception& e) {
+        return RequestResult::error_msg(std::string(e.what()));
     }
 }
 
@@ -196,6 +196,9 @@ inline RequestResult GET(
 
         request.setOpt(cURLpp::options::WriteStream(&responseStream));
 
+        // Timeout
+        request.setOpt(curlpp::options::Timeout(20L)); // 20 seconds
+
         // Performing the request
         request.perform();
 
@@ -206,10 +209,10 @@ inline RequestResult GET(
         if (response.contains("details"))
             return RequestResult::error(response);
         return RequestResult::success(response);
-    } catch (cURLpp::RuntimeError&) {
-        return RequestResult::error("Runtime error");
-    } catch (cURLpp::LogicError&) {
-        return RequestResult::error("Logic error");
+    } catch (cURLpp::RuntimeError& e) {
+        return RequestResult::error_msg("Request timed out");
+    } catch (cURLpp::LogicError& e) {
+        return RequestResult::error_msg("Logic error: " + std::string(e.what()));
     }
 }
 
