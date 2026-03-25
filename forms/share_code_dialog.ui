@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,1,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,1,0,0">
    <property name="sizeConstraint">
     <enum>QLayout::SetNoConstraint</enum>
    </property>
@@ -26,6 +26,21 @@
      </property>
      <property name="text">
       <string>Access Code</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="timeLabel">
+     <property name="font">
+      <font>
+       <pointsize>24</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string/>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -46,7 +61,7 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,0">
      <property name="topMargin">
       <number>0</number>
      </property>
@@ -54,7 +69,7 @@
       <widget class="QLabel" name="codeLabel">
        <property name="font">
         <font>
-         <pointsize>56</pointsize>
+         <pointsize>48</pointsize>
         </font>
        </property>
        <property name="text">
@@ -67,6 +82,23 @@
      </item>
      <item>
       <widget class="QPushButton" name="copyButton">
+       <property name="styleSheet">
+        <string notr="true">border: none;
+background: transparent;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
        <property name="styleSheet">
         <string notr="true">border: none;
 background: transparent;</string>

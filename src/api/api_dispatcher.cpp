@@ -12,13 +12,14 @@ ApiDispatcher::ApiDispatcher() : QObject(nullptr), tokenRefreshTimer(new QTimer(
 }
 
 ApiDispatcher::~ApiDispatcher() {
-    this->tokenRefreshTimer->stop();
     this->refreshFuture.waitForFinished();
 }
 
 void ApiDispatcher::storeTokens(const std::string& access, const std::string& refresh) {
     this->tokenPair.store(access, refresh);  
-    this->tokenRefreshTimer->start(10 * 60 * 1000); // 10 minutes
+
+    // Access token lifetime is 10 minites, so we refresh 1 minute early
+    this->tokenRefreshTimer->start(9 * 60 * 1000); // 9 minutes
 }
 
 RequestResultFuture ApiDispatcher::login(const std::string& email, const std::string& password_hash) const {
@@ -108,9 +109,7 @@ void ApiDispatcher::onRefreshTimer() {
             std::string refresh = response.body.at("refresh_token").get<std::string>();
 
             this->tokenPair.store(access, refresh);
-        } else {
-            this->tokenRefreshTimer->stop();
+        } else
             emit sessionExpired();
-        }
     });
 }

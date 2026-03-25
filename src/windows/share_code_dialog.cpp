@@ -5,19 +5,26 @@
 
 #include <QTimer>
 #include <QClipboard>
+#include <QMessageBox>
 
-ShareCodeDialog::ShareCodeDialog(const std::string code, QWidget* parent)
-    : QDialog(parent), ui(std::make_unique<Ui::ShareCodeDialog>()), code(code)
+#include "api/api_dispatcher.hpp"
+#include "watch_future.hpp"
+
+ShareCodeDialog::ShareCodeDialog(const std::string code, const size_t fileID, QWidget* parent)
+    : QDialog(parent), ui(std::make_unique<Ui::ShareCodeDialog>()), code(code), fileID(fileID)
 {
     ui->setupUi(this);
 
     this->copyIcon = QIcon("../assets/copy.png");
-    this->copiedIcon = QIcon("../assets/check.png");
+    this->clickedIcon = QIcon("../assets/check.png");
+    this->refreshIcon = QIcon("../assets/refresh.png");
 
     copyTimer = new QTimer(this);
+    displayTimer = new QTimer(this);
 
     ui->codeLabel->setText(QString::fromStdString(code));
     ui->copyButton->setIcon(this->copyIcon);
+    ui->refreshButton->setIcon(this->refreshIcon);
 
     connect(
         ui->closeButton, &QPushButton::clicked,
@@ -26,18 +33,72 @@ ShareCodeDialog::ShareCodeDialog(const std::string code, QWidget* parent)
 
     connect(
         copyTimer, &QTimer::timeout, 
-        this, [this] { ui->copyButton->setIcon(this->copyIcon); }
+        this, &ShareCodeDialog::resetCopyButton
     );
+
+    connect(
+        displayTimer, &QTimer::timeout,
+        this, [this] {
+            timeRemaining = timeRemaining.addSecs(-1);
+            ui->timeLabel->setText(timeRemaining.toString("mm:ss"));
+
+            if (timeRemaining == QTime(0, 0, 0)) {
+                displayTimer->stop();
+                this->onRefreshClicked();
+            }
+        }
+    );
+
+    this->restartRefreshTimer();
+
     connect(ui->copyButton, &QPushButton::clicked, this, &ShareCodeDialog::onCopyClicked);
+    connect(ui->refreshButton, &QPushButton::clicked, this, &ShareCodeDialog::onRefreshClicked);
 
 }
 
 ShareCodeDialog::~ShareCodeDialog() = default;
 
+void ShareCodeDialog::resetCopyButton() {
+    ui->copyButton->setEnabled(true);
+    ui->copyButton->setIcon(this->copyIcon);
+}
+
+void ShareCodeDialog::restartRefreshTimer() {
+    timeRemaining = QTime(0, 5, 0);
+    displayTimer->start(1000);
+    ui->timeLabel->setText(timeRemaining.toString("mm:ss"));
+}
+
 void ShareCodeDialog::onCopyClicked() {
-    ui->copyButton->setIcon(this->copiedIcon);
+    ui->copyButton->setEnabled(false);
+    ui->copyButton->setIcon(this->clickedIcon);
+
     copyTimer->start(3000);
 
     static QClipboard *clipboard = QGuiApplication::clipboard();
     clipboard->setText(QString::fromStdString(this->code));
+}
+
+void ShareCodeDialog::onRefreshClicked() {
+    ui->refreshButton->setEnabled(false);
+    ui->refreshButton->setIcon(this->clickedIcon);
+    ui->codeLabel->setText("...");
+
+    this->resetCopyButton();
+
+    // Sharing the same file again, which is basically regenerating code
+    watchFuture(
+        this, ApiDispatcher::instance().shareFile(fileID),
+        [this](const API::RequestResult& response) {
+            ui->codeLabel->setText(QString::fromStdString(response.body.at("code").get<std::string>()));
+            ui->refreshButton->setEnabled(true);
+            ui->refreshButton->setIcon(this->refreshIcon);
+
+            this->restartRefreshTimer();
+        },
+        [this](const API::RequestResult& response) {
+            QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
+            this->close();
+        }
+    );
 }
