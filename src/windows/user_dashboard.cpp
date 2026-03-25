@@ -105,8 +105,8 @@ void UserDashboard::onDownloadSharedButtonClicked() {
 void UserDashboard::onShareFile(const size_t fileID) {
     watchFuture(
         this, ApiDispatcher::instance().shareFile(fileID),
-        [this](const API::RequestResult& response) {
-            auto *dialog = new ShareCodeDialog(response.body.at("code").get<std::string>(), this);
+        [this, fileID](const API::RequestResult& response) {
+            auto *dialog = new ShareCodeDialog(response.body.at("code").get<std::string>(), fileID, this);
             dialog->setAttribute(Qt::WA_DeleteOnClose);
             dialog->setWindowModality(Qt::WindowModal);
             dialog->show();

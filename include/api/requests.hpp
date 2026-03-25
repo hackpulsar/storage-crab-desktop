@@ -13,6 +13,8 @@
 
 #include "token_pair.h"
 
+// TODO: refactor, move basic configurations to a helper function
+
 namespace API::Requests {
 
 inline RequestResult POST(
@@ -23,6 +25,9 @@ inline RequestResult POST(
     try {
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
+
+        request.setOpt(cURLpp::options::SslVerifyPeer(false));
+        request.setOpt(cURLpp::options::SslVerifyHost(false));
 
         // String stream for retrieving
         std::ostringstream responseStream;
@@ -74,6 +79,9 @@ inline RequestResult POST_UPLOAD(
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
 
+        request.setOpt(cURLpp::options::SslVerifyPeer(false));
+        request.setOpt(cURLpp::options::SslVerifyHost(false));
+
         // String stream for retrieving
         std::ostringstream responseStream;
         request.setOpt(cURLpp::options::WriteStream(&responseStream));
@@ -121,6 +129,9 @@ inline RequestResult GET_DOWNLOAD(
     try {
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
+
+        request.setOpt(cURLpp::options::SslVerifyPeer(false));
+        request.setOpt(cURLpp::options::SslVerifyHost(false));
 
         std::string responseBody;
         std::string filename;
@@ -183,6 +194,9 @@ inline RequestResult GET(
     try {
         cURLpp::Easy request;
         request.setOpt(cURLpp::options::Url(url));
+
+        request.setOpt(cURLpp::options::SslVerifyPeer(false));
+        request.setOpt(cURLpp::options::SslVerifyHost(false));
 
         // String stream for retrieving
         std::ostringstream responseStream;
