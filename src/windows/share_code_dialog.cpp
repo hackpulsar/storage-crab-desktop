@@ -20,6 +20,7 @@ ShareCodeDialog::ShareCodeDialog(const std::string code, const size_t fileID, QW
     this->refreshIcon = QIcon("../assets/refresh.png");
 
     copyTimer = new QTimer(this);
+    displayTimer = new QTimer(this);
 
     ui->codeLabel->setText(QString::fromStdString(code));
     ui->copyButton->setIcon(this->copyIcon);
@@ -35,6 +36,21 @@ ShareCodeDialog::ShareCodeDialog(const std::string code, const size_t fileID, QW
         this, &ShareCodeDialog::resetCopyButton
     );
 
+    connect(
+        displayTimer, &QTimer::timeout,
+        this, [this] {
+            timeRemaining = timeRemaining.addSecs(-1);
+            ui->timeLabel->setText(timeRemaining.toString("mm:ss"));
+
+            if (timeRemaining == QTime(0, 0, 0)) {
+                displayTimer->stop();
+                this->onRefreshClicked();
+            }
+        }
+    );
+
+    this->restartRefreshTimer();
+
     connect(ui->copyButton, &QPushButton::clicked, this, &ShareCodeDialog::onCopyClicked);
     connect(ui->refreshButton, &QPushButton::clicked, this, &ShareCodeDialog::onRefreshClicked);
 
@@ -45,6 +61,12 @@ ShareCodeDialog::~ShareCodeDialog() = default;
 void ShareCodeDialog::resetCopyButton() {
     ui->copyButton->setEnabled(true);
     ui->copyButton->setIcon(this->copyIcon);
+}
+
+void ShareCodeDialog::restartRefreshTimer() {
+    timeRemaining = QTime(0, 5, 0);
+    displayTimer->start(1000);
+    ui->timeLabel->setText(timeRemaining.toString("mm:ss"));
 }
 
 void ShareCodeDialog::onCopyClicked() {
@@ -71,6 +93,8 @@ void ShareCodeDialog::onRefreshClicked() {
             ui->codeLabel->setText(QString::fromStdString(response.body.at("code").get<std::string>()));
             ui->refreshButton->setEnabled(true);
             ui->refreshButton->setIcon(this->refreshIcon);
+
+            this->restartRefreshTimer();
         },
         [this](const API::RequestResult& response) {
             QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));

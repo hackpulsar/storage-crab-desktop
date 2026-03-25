@@ -2,6 +2,7 @@
 #define SHARE_CODE_DIALOG_H
 
 #include <QDialog>
+#include <QTime>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ShareCodeDialog; }
@@ -23,7 +24,12 @@ private:
     QTimer* copyTimer;
     QIcon copyIcon, clickedIcon, refreshIcon;
 
+    QTimer* displayTimer;
+    QTime timeRemaining;
+
     void resetCopyButton();
+
+    void restartRefreshTimer();
 
 private slots:
     void onCopyClicked();
