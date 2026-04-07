@@ -8,7 +8,7 @@
 
 #include "api/api_dispatcher.hpp"
 #include "windows/user_dashboard.h"
-#include "cryptography/file_encryptor.h"
+#include "cryptography/file_crypto.h"
 #include "watch_future.hpp"
 
 UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
@@ -126,7 +126,7 @@ void UploadDialog::onUploadButtonClicked() {
 
     using namespace Cryptography;
 
-    FileEncryptor::Options opts {
+    FileCrypto::EncryptOptions opts {
         .filePath           = this->filePath,
         .keyPath            = this->keyPath,
         .aesType            = this->AESType,
@@ -136,8 +136,8 @@ void UploadDialog::onUploadButtonClicked() {
     };
 
     watchFuture(
-        this, dispatch([opts] { return FileEncryptor::encryptFile(opts); }),
-        [this](const FileEncryptor::Result& result) {
+        this, dispatch([opts] { return FileCrypto::encryptFile(opts); }),
+        [this](const FileCrypto::Result& result) {
             watchFuture(
                 this, ApiDispatcher::instance().uploadFile(result.fileName, result.path),
                 [this](const API::RequestResult&) { 
@@ -150,7 +150,7 @@ void UploadDialog::onUploadButtonClicked() {
                 }
             );
         },
-        [this](const FileEncryptor::Result&) { QMessageBox::critical(this, "Error", "Something went wrong during file encryption."); }
+        [this](const FileCrypto::Result&) { QMessageBox::critical(this, "Error", "Something went wrong during file encryption."); }
     );
 }
 

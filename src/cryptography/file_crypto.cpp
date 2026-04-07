@@ -1,15 +1,15 @@
-#include "cryptography/file_encryptor.h"
+#include "cryptography/file_crypto.h"
 
 #include <fstream>
 
 #include <QFileInfo>
 #include <QDir>
 
-#include "cryptography/encryption_service.h"
+#include "cryptography/crypto_service.h"
 
 namespace Cryptography {
 
-FileEncryptor::Result FileEncryptor::encryptFile(const Options& opts) {
+FileCrypto::Result FileCrypto::encryptFile(const EncryptOptions& opts) {
     const std::string content = readFile(opts.filePath);
 
     QFileInfo fileInfo(QString::fromStdString(opts.filePath));
@@ -17,10 +17,16 @@ FileEncryptor::Result FileEncryptor::encryptFile(const Options& opts) {
     const std::string fileExtension = fileInfo.suffix().toStdString();
 
     const int rsaKeySize = opts.rsaKeySize;
-    auto result = EncryptionService::Encrypt(
-        content, fileName, opts.aesType, opts.algorithm,
-        rsaKeySize, opts.encryptFileName
-    );
+    CryptoService::EncryptResult result;
+    
+    try {
+        result = CryptoService::Encrypt(
+            content, fileName, opts.aesType, opts.algorithm,
+            rsaKeySize, opts.encryptFileName
+        );
+    } catch (std::exception&) {
+        return Result { { .ok = false } }; // empty failure
+    }
 
     // Save config
     std::ofstream configFile(opts.keyPath);
@@ -37,7 +43,11 @@ FileEncryptor::Result FileEncryptor::encryptFile(const Options& opts) {
     };
 }
 
-std::string FileEncryptor::readFile(const std::string& path) {
+FileCrypto::Result FileCrypto::decryptFile(const DecryptOptions& opts) {
+    return {};
+}
+
+std::string FileCrypto::readFile(const std::string& path) {
     std::fstream sourceFile(path, std::fstream::in | std::fstream::binary);
     if (!sourceFile.is_open()) return "";
 
@@ -47,7 +57,7 @@ std::string FileEncryptor::readFile(const std::string& path) {
     return content.str();
 }
 
-bool FileEncryptor::writeFile(const std::string& path, const Utils::ByteArray& data) {
+bool FileCrypto::writeFile(const std::string& path, const Utils::ByteArray& data) {
     std::ofstream encryptedFile(path, std::ios::binary);
     if (!encryptedFile.is_open()) return false;
 
@@ -55,7 +65,7 @@ bool FileEncryptor::writeFile(const std::string& path, const Utils::ByteArray& d
     return true;
 }
 
-std::string FileEncryptor::buildOutputPath(const std::string& path, const std::string& fileName) {
+std::string FileCrypto::buildOutputPath(const std::string& path, const std::string& fileName) {
     const QString dir = QFileInfo(QString::fromStdString(path)).absolutePath();
     return QDir(dir).filePath(QString::fromStdString(fileName + ".enc")).toStdString();
 }

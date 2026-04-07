@@ -9,21 +9,33 @@
 
 namespace Cryptography {
 
-class EncryptionService final {
+class CryptoService final {
 public:
-    struct Result {
+    struct EncryptResult {
         Utils::ByteArray encryptedContent;
         std::string encryptedFileName;
         nlohmann::json config;
     };
 
-    static Result Encrypt(
+    struct DecryptResult {
+        std::string content;
+        std::string decryptedFileName;
+    };
+
+    static EncryptResult Encrypt(
         const std::string& content,
         const std::string& fileName,
         AESType aesType,
         AlgorithmType algorithmType,
         size_t rsaKeySize,
-        bool encryptname
+        bool encryptName
+    );
+
+    static DecryptResult Decrypt(
+        const Utils::ByteArray& content,
+        const std::string& fileName,
+        nlohmann::json& config,
+        bool decryptName
     );
 };
 

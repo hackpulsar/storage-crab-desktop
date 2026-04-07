@@ -30,6 +30,8 @@ private slots:
 
     void onUploadButtonClicked();
 
+    void onDecryptButtonClicked();
+
     void onDownloadSharedButtonClicked();
 
     void onShareFile(size_t fileID);

@@ -20,11 +20,14 @@ struct KeyData final : Key {
 // Generates an RSA public/private key pair
 KeyData generateKey(size_t key_size);
 
-// Converts EVP_PKEY to a string
+// Parses RSA private key from json config (key file)
+KeyData parseKey(const nlohmann::json& config);
+
 std::string keyToString(const EVP_PKEY* keyPair, bool isPrivate);
 
-// Encrypts a string and outputs a byte array
 Utils::ByteArray encrypt(const KeyData& config, const std::string& input);
+
+std::string decrypt(const KeyData& config, const Utils::ByteArray& ciphertext);
 
 }
 

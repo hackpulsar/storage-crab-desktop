@@ -34,6 +34,10 @@ UserDashboard::UserDashboard(const std::string& username, QWidget* parent)
         this, &UserDashboard::onUploadButtonClicked
     );
     connect(
+        ui->decryptButton, &QPushButton::clicked,
+        this, &UserDashboard::onDecryptButtonClicked
+    );
+    connect(
         ui->downloadSharedButton, &QPushButton::clicked,
         this, &UserDashboard::onDownloadSharedButtonClicked
     );
@@ -93,6 +97,10 @@ void UserDashboard::onUploadButtonClicked() {
             this->tryRetrieveFiles();
         }
     );
+}
+
+void UserDashboard::onDecryptButtonClicked() {
+    
 }
 
 void UserDashboard::onDownloadSharedButtonClicked() {
