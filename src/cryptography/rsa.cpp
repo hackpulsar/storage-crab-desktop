@@ -68,7 +68,7 @@ std::string keyToString(const EVP_PKEY* keyPair, const bool isPrivate) {
     return result;
 }
 
-Utils::ByteArray encrypt(const KeyData& config, const std::string& input) {
+Utils::ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input) {
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(config.keyPair, nullptr);
     Utils::ByteArray ciphertext;
 
@@ -97,29 +97,30 @@ Utils::ByteArray encrypt(const KeyData& config, const std::string& input) {
     return ciphertext;
 }
 
-std::string decrypt(const KeyData& config, const Utils::ByteArray& ciphertext) {
+Utils::ByteArray decrypt(const KeyData& config, const Utils::ByteArray& ciphertext) {
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(config.keyPair, nullptr);
-    std::string plaintext;
+    if (!ctx)
+        throw std::runtime_error("Could not create RSA decryption context");
 
-    if (!ctx || EVP_PKEY_decrypt_init(ctx) <= 0)
-        throw std::runtime_error("Could not initialize RSA key decryption context");
+    if (EVP_PKEY_decrypt_init(ctx) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not initialize RSA decryption context");
+    }
 
-    // Getting out size
     size_t outlen = 0;
-    if (EVP_PKEY_decrypt(ctx, nullptr, &outlen, ciphertext.data(), ciphertext.size()) <= 0)
-        throw std::runtime_error("Could not determine decryption output size");
+    if (EVP_PKEY_decrypt(ctx, nullptr, &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not determine RSA decryption output size");
+    }
 
-    // Performing the actual decryption
-    std::vector<unsigned char> plaintext_buf(outlen);
-    if (EVP_PKEY_decrypt(ctx, plaintext_buf.data(), &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
+    Utils::ByteArray plaintext(outlen);
+    if (EVP_PKEY_decrypt(ctx, plaintext.data(), &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
         ERR_print_errors_fp(stderr);
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Could not decrypt with RSA");
     }
 
-    plaintext_buf.resize(outlen); // Trim to actual size
-    plaintext.assign(plaintext_buf.begin(), plaintext_buf.end());
-
+    plaintext.resize(outlen);
     EVP_PKEY_CTX_free(ctx);
     return plaintext;
 }

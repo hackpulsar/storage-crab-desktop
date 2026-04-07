@@ -43,7 +43,7 @@ KeyData parseKey(const nlohmann::json& config) {
     );
 }
 
-ByteArray encrypt(const KeyData& config, const std::string& input) {
+ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx)
         throw std::runtime_error("Failed to create EVP_CIPHER_CTX");
@@ -94,7 +94,7 @@ ByteArray encrypt(const KeyData& config, const std::string& input) {
     return ciphertext;
 }
 
-std::string decrypt(const KeyData& config, const ByteArray& ciphertext) {
+ByteArray decrypt(const KeyData& config, const ByteArray& ciphertext) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx)
         throw std::runtime_error("Failed to create EVP_CIPHER_CTX");
@@ -104,46 +104,49 @@ std::string decrypt(const KeyData& config, const ByteArray& ciphertext) {
         case AESType::AES_128: cipher = EVP_aes_128_cbc(); break;
         case AESType::AES_192: cipher = EVP_aes_192_cbc(); break;
         case AESType::AES_256: cipher = EVP_aes_256_cbc(); break;
+        default:
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Unsupported AES type");
     }
 
-    // Initialize decryption context
-    const int init_result = EVP_DecryptInit_ex(
-        ctx,
-        cipher,
-        nullptr,
-        config.key.data(),
-        config.iv.data()
-    );
-    if (init_result != 1)
+    if (EVP_DecryptInit_ex(
+            ctx,
+            cipher,
+            nullptr,
+            config.key.data(),
+            config.iv.data()
+        ) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
         throw std::runtime_error("Failed to initialize AES decryption context");
+    }
 
-    // Decrypt the ciphertext
-    std::string plaintext(ciphertext.size(), 0);
-    int len = 0, plaintext_len = 0;
+    // Allocate enough room: ciphertext size + block size
+    ByteArray plaintext(ciphertext.size() + EVP_CIPHER_block_size(cipher));
+    int len = 0;
+    int plaintext_len = 0;
 
-    const int decryption_result = EVP_DecryptUpdate(
-        ctx,
-        reinterpret_cast<unsigned char*>(plaintext.data()),
-        &len,
-        ciphertext.data(),
-        ciphertext.size()
-    );
-
-    if (decryption_result != 1)
-        throw std::runtime_error("Failed to decrypt AES context");
+    if (EVP_DecryptUpdate(
+            ctx,
+            plaintext.data(),
+            &len,
+            ciphertext.data(),
+            static_cast<int>(ciphertext.size())
+        ) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to decrypt AES ciphertext");
+    }
 
     plaintext_len = len;
 
-    // Finalize decryption
-    if (EVP_DecryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(plaintext.data()) + len, &len) != 1)
-        throw std::runtime_error("Failed to finalize AES decryption context");
+    if (EVP_DecryptFinal_ex(ctx, plaintext.data() + plaintext_len, &len) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to finalize AES decryption (bad key/IV/data?)");
+    }
 
     plaintext_len += len;
-
-    // Clean up
-    EVP_CIPHER_CTX_free(ctx);
-
     plaintext.resize(plaintext_len);
+
+    EVP_CIPHER_CTX_free(ctx);
     return plaintext;
 }
 

@@ -18,12 +18,12 @@ public:
     };
 
     struct DecryptResult {
-        std::string content;
+        Utils::ByteArray content;
         std::string decryptedFileName;
     };
 
     static EncryptResult Encrypt(
-        const std::string& content,
+        const Utils::ByteArray& content,
         const std::string& fileName,
         AESType aesType,
         AlgorithmType algorithmType,

@@ -25,9 +25,9 @@ KeyData parseKey(const nlohmann::json& config);
 
 std::string keyToString(const EVP_PKEY* keyPair, bool isPrivate);
 
-Utils::ByteArray encrypt(const KeyData& config, const std::string& input);
+Utils::ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input);
 
-std::string decrypt(const KeyData& config, const Utils::ByteArray& ciphertext);
+Utils::ByteArray decrypt(const KeyData& config, const Utils::ByteArray& ciphertext);
 
 }
 

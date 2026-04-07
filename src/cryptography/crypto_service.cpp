@@ -6,7 +6,7 @@
 namespace Cryptography {
 
 CryptoService::EncryptResult CryptoService::Encrypt(
-    const std::string& content,
+    const Utils::ByteArray& content,
     const std::string& fileName,
     AESType aesType,
     AlgorithmType algorithmType,
@@ -21,8 +21,10 @@ CryptoService::EncryptResult CryptoService::Encrypt(
     result.encryptedFileName = fileName;
 
     // Encrypt name if checked
-    if (encryptName)
-        result.encryptedFileName = Utils::toHEX(AES::encrypt(AESconfig, fileName));
+    if (encryptName) {
+        Utils::ByteArray binaryFileName(fileName.begin(), fileName.end());
+        result.encryptedFileName = Utils::toHEX(AES::encrypt(AESconfig, binaryFileName));
+    }
 
     result.config = AESconfig.toJSON();
 
@@ -30,9 +32,9 @@ CryptoService::EncryptResult CryptoService::Encrypt(
     // RSA is for encrypting an AES key.
     if (algorithmType == AlgorithmType::Hybrid) {
         auto RSAconfig = RSA::generateKey(rsaKeySize);
-        auto encryptedKey = RSA::encrypt(RSAconfig, Utils::toHEX(AESconfig.key));
+        auto encryptedKey = RSA::encrypt(RSAconfig, AESconfig.key);
 
-        result.config["type"] = "hybrid";
+        result.config["type"] = algorithmTypeToString(algorithmType);
         result.config["AES"]["key"] = Utils::toHEX(encryptedKey);
         result.config["RSA"]["private_key"] = RSA::keyToString(RSAconfig.keyPair, true);
         result.config["RSA"]["public_key"] = RSA::keyToString(RSAconfig.keyPair, false);
@@ -66,8 +68,10 @@ CryptoService::DecryptResult CryptoService::Decrypt(
     result.content = AES::decrypt(AESconfig, content);
 
     result.decryptedFileName = fileName;
-    if (decryptName)
-        result.decryptedFileName = AES::decrypt(AESconfig, Utils::toByteArray(fileName));
+    if (decryptName) {
+        auto decryptedFileName = AES::decrypt(AESconfig, Utils::toByteArray(fileName));
+        result.decryptedFileName = std::string(decryptedFileName.begin(), decryptedFileName.end());
+    }
 
     return result;
 }

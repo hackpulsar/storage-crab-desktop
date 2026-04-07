@@ -10,7 +10,9 @@
 namespace Cryptography {
 
 FileCrypto::Result FileCrypto::encryptFile(const EncryptOptions& opts) {
-    const std::string content = readFile(opts.filePath);
+    using namespace Utils;
+
+    const ByteArray content = readFile(opts.filePath);
 
     QFileInfo fileInfo(QString::fromStdString(opts.filePath));
     const std::string fileName = fileInfo.baseName().toStdString();
@@ -44,17 +46,52 @@ FileCrypto::Result FileCrypto::encryptFile(const EncryptOptions& opts) {
 }
 
 FileCrypto::Result FileCrypto::decryptFile(const DecryptOptions& opts) {
-    return {};
+    using namespace Utils;
+
+    const ByteArray content = readFile(opts.filePath);
+
+    std::ifstream ifs(opts.keyPath);
+    nlohmann::json config = nlohmann::json::parse(ifs);
+
+    QFileInfo fileInfo(QString::fromStdString(opts.filePath));
+    const std::string fileName = fileInfo.baseName().toStdString();
+    std::string fileExtension = fileInfo.suffix().toStdString();
+
+    // Trimming '.enc'
+    fileExtension.resize(fileExtension.size() - 4);
+
+    CryptoService::DecryptResult result;
+    
+    try {
+        result = CryptoService::Decrypt(content, fileName, config, opts.decryptFileName);
+    } catch (std::exception&) {
+        return Result { { .ok = false } }; // empty failure
+    }
+
+    // Build output path and write
+    const std::string outPath = buildOutputPath(opts.filePath, result.decryptedFileName + "." + fileExtension);
+    writeFile(outPath, result.content);
+
+    return Result {
+        { .ok = true },
+        .path       = outPath, 
+        .fileName   = std::string(result.decryptedFileName.begin(), result.decryptedFileName.end()) + "." + fileExtension
+    };
 }
 
-std::string FileCrypto::readFile(const std::string& path) {
-    std::fstream sourceFile(path, std::fstream::in | std::fstream::binary);
-    if (!sourceFile.is_open()) return "";
+Utils::ByteArray FileCrypto::readFile(const std::string& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) return {};
 
-    std::ostringstream content;
-    content << sourceFile.rdbuf();
+    // Determine file size
+    file.seekg(0, std::ios::end);
+    size_t size = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-    return content.str();
+    Utils::ByteArray buffer(size);
+    file.read(reinterpret_cast<char*>(buffer.data()), size);
+
+    return buffer;
 }
 
 bool FileCrypto::writeFile(const std::string& path, const Utils::ByteArray& data) {

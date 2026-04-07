@@ -33,9 +33,9 @@ KeyData generateKey(AESType type);
 
 KeyData parseKey(const nlohmann::json& config);
 
-ByteArray encrypt(const KeyData& config, const std::string& input);
+ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input);
 
-std::string decrypt(const KeyData& config, const ByteArray& ciphertext);
+ByteArray decrypt(const KeyData& config, const ByteArray& ciphertext);
 
 }
 
