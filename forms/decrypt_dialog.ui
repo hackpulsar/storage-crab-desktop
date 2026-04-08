@@ -132,7 +132,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QCheckBox" name="encryptNameCheckBox">
+      <widget class="QCheckBox" name="decryptNameCheckBox">
        <property name="text">
         <string/>
        </property>

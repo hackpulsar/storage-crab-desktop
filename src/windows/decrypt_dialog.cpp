@@ -58,7 +58,7 @@ void DecryptDialog::onDecryptButtonClicked() {
     FileCrypto::DecryptOptions opts {
         ui->filePathLineEdit->text().toStdString(),
         ui->keyPathLineEdit->text().toStdString(),
-        ui->encryptNameCheckBox->isChecked()
+        ui->decryptNameCheckBox->isChecked()
     };
 
     watchFuture(
@@ -68,6 +68,9 @@ void DecryptDialog::onDecryptButtonClicked() {
             this->close();
         },
         [this](const FileCrypto::Result&) { 
+            loadingAnimation->stop();
+            ui->decryptButton->setText("Decrypt");
+            ui->decryptButton->setIcon(QIcon());
             QMessageBox::critical(this, "Error", "Something went wrong during file decryption."); 
         }
     );
