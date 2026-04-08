@@ -49,7 +49,7 @@
         <widget class="QLineEdit" name="filePathLineEdit">
          <property name="font">
           <font>
-           <pointsize>20</pointsize>
+           <pointsize>16</pointsize>
           </font>
          </property>
          <property name="styleSheet">
@@ -96,7 +96,7 @@
         <widget class="QLineEdit" name="keyPathLineEdit">
          <property name="font">
           <font>
-           <pointsize>20</pointsize>
+           <pointsize>16</pointsize>
           </font>
          </property>
          <property name="styleSheet">

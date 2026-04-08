@@ -26,8 +26,6 @@ KeyData generateKey(const size_t key_size) {
         throw std::runtime_error("Could not initialize RSA keygen context");
     }
 
-    std::cout << key_size << std::endl;
-
     if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, key_size) <= 0) {
         throw std::runtime_error("Could not set RSA key size");
     }

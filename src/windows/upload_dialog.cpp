@@ -16,10 +16,8 @@ UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
 {
     ui->setupUi(this);
 
-    // Setting the file path
     ui->filePathLineEdit->setText(QString::fromStdString(this->filePath));
 
-    // Loading animation
     loadingAnimation = new QMovie(this);
     loadingAnimation->setFileName("../assets/loading.gif");
 

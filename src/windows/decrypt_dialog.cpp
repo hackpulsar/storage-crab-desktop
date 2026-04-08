@@ -74,27 +74,32 @@ void DecryptDialog::onDecryptButtonClicked() {
 }
 
 void DecryptDialog::onChooseFilePathButtonClicked() {
-    const std::string newFilePath = QFileDialog::getOpenFileName(
-        this, "Select file to decrypt", QDir::homePath()
-    ).toStdString();
+    auto dialog = QFileDialog(this);
+    dialog.setWindowTitle("Select file to decrypt");
+    dialog.setDirectory(QDir::homePath());
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setFileMode(QFileDialog::ExistingFile);
+    dialog.setNameFilter(tr("Encrypted Files (*.enc);;All Files (*)"));
 
-    if (newFilePath != "") {
-        ui->filePathLineEdit->setText(QString::fromStdString(newFilePath));
-        this->filePath = newFilePath;
+    if (dialog.exec()) {
+        const std::string newFilePath = dialog.selectedFiles().first().toStdString();
+
+        if (newFilePath != "") {
+            ui->filePathLineEdit->setText(QString::fromStdString(newFilePath));
+            this->filePath = newFilePath;
+        }
     }
 }
 
 void DecryptDialog::onChooseKeyPathButtonClicked() {
     auto dialog = QFileDialog(this);
-    dialog.setWindowTitle("Select a file to save the key");
+    dialog.setWindowTitle("Select a key");
     dialog.setDirectory(QDir::homePath());
-    dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setAcceptMode(QFileDialog::AcceptOpen);
+    dialog.setFileMode(QFileDialog::ExistingFile);
     dialog.setNameFilter(tr("Crab Key (*.crbkey);;All Files (*)"));
-    dialog.setDefaultSuffix("crbkey");
 
-    if (dialog.exec())
-    {
+    if (dialog.exec()) {
         const std::string newKeyPath = dialog.selectedFiles().first().toStdString();
 
         if (newKeyPath != "") {
