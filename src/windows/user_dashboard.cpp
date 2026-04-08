@@ -6,6 +6,7 @@
 #include <QThread>
 
 #include "windows/upload_dialog.h"
+#include "windows/decrypt_dialog.h"
 #include "windows/login_window.h"
 #include "windows/share_code_dialog.h"
 #include "windows/download_shared_dialog.h"
@@ -100,7 +101,18 @@ void UserDashboard::onUploadButtonClicked() {
 }
 
 void UserDashboard::onDecryptButtonClicked() {
-    
+    const std::string filePath = QFileDialog::getOpenFileName(
+        this,
+        "Select file to upload",
+        QDir::homePath()
+    ).toStdString();
+
+    if (filePath.empty()) return;
+
+    auto *dialog = new DecryptDialog(filePath, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::WindowModal);
+    dialog->show();
 }
 
 void UserDashboard::onDownloadSharedButtonClicked() {

@@ -35,7 +35,7 @@ FileCrypto::Result FileCrypto::encryptFile(const EncryptOptions& opts) {
     configFile << result.config.dump();
 
     // Build output path and write
-    const std::string outPath = buildOutputPath(opts.filePath, result.encryptedFileName + "." + fileExtension);
+    const std::string outPath = buildOutputPath(opts.filePath, result.encryptedFileName + "." + fileExtension + ".enc");
     writeFile(outPath, result.encryptedContent);
 
     return Result {
@@ -55,7 +55,7 @@ FileCrypto::Result FileCrypto::decryptFile(const DecryptOptions& opts) {
 
     QFileInfo fileInfo(QString::fromStdString(opts.filePath));
     const std::string fileName = fileInfo.baseName().toStdString();
-    std::string fileExtension = fileInfo.suffix().toStdString();
+    std::string fileExtension = fileInfo.completeSuffix().toStdString();
 
     // Trimming '.enc'
     fileExtension.resize(fileExtension.size() - 4);
@@ -103,8 +103,8 @@ bool FileCrypto::writeFile(const std::string& path, const Utils::ByteArray& data
 }
 
 std::string FileCrypto::buildOutputPath(const std::string& path, const std::string& fileName) {
-    const QString dir = QFileInfo(QString::fromStdString(path)).absolutePath();
-    return QDir(dir).filePath(QString::fromStdString(fileName + ".enc")).toStdString();
+    const QString dir = QFileInfo(path.c_str()).absolutePath();
+    return QDir(dir).filePath(fileName.c_str()).toStdString();
 }
 
 }

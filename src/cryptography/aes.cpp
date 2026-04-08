@@ -36,9 +36,12 @@ KeyData generateKey(AESType type) {
 }
 
 KeyData parseKey(const nlohmann::json& config) {
+    // Read the key as an array, since nlohmann::json cannot store long strings
+    Utils::ByteArray keyBytes(config.at("AES").at("key").begin(), config.at("AES").at("key").end());
+
     return KeyData(
-        toByteArray(config.at("AES").at("key")),
-        toByteArray(config.at("AES").at("iv")),
+        keyBytes,
+        toByteArray(config.at("AES").at("iv").get<std::string>()),
         config.at("AES").at("type")
     );
 }
