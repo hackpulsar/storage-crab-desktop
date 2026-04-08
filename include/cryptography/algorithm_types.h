@@ -14,6 +14,14 @@ inline AlgorithmType algorithmTypeFromString(const std::string &algorithmType) {
     return AlgorithmType::AES;
 }
 
+inline std::string algorithmTypeToString(const AlgorithmType type) {
+    switch (type) {
+        case AlgorithmType::AES: return "AES";
+        case AlgorithmType::Hybrid: return "Hybrid (AES + RSA)";
+    }
+    return "";
+}
+
 // Types of AES.
 // Numeric values are assigned accordingly to the type's key length in bytes.
 enum class AESType {

@@ -13,10 +13,10 @@ KeyData::KeyData(AESKey key, ByteArray iv, const AESType type)
 nlohmann::json KeyData::toJSON() {
     nlohmann::json keyJson;
 
-    // Assemble the JSON
     keyJson["type"] = "AES";
     keyJson["AES"]["key"] = toHEX(key);
     keyJson["AES"]["iv"] = toHEX(iv);
+    keyJson["AES"]["type"] = type;
 
     return keyJson;
 }
@@ -35,7 +35,18 @@ KeyData generateKey(AESType type) {
     return {key, iv, type};
 }
 
-ByteArray encrypt(const KeyData& config, const std::string& input) {
+KeyData parseKey(const nlohmann::json& config) {
+    // Read the key as an array, since nlohmann::json cannot store long strings
+    Utils::ByteArray keyBytes(config.at("AES").at("key").begin(), config.at("AES").at("key").end());
+
+    return KeyData(
+        keyBytes,
+        toByteArray(config.at("AES").at("iv").get<std::string>()),
+        config.at("AES").at("type")
+    );
+}
+
+ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx)
         throw std::runtime_error("Failed to create EVP_CIPHER_CTX");
@@ -84,6 +95,62 @@ ByteArray encrypt(const KeyData& config, const std::string& input) {
 
     ciphertext.resize(ciphertext_len);
     return ciphertext;
+}
+
+ByteArray decrypt(const KeyData& config, const ByteArray& ciphertext) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx)
+        throw std::runtime_error("Failed to create EVP_CIPHER_CTX");
+
+    const EVP_CIPHER* cipher = nullptr;
+    switch (config.type) {
+        case AESType::AES_128: cipher = EVP_aes_128_cbc(); break;
+        case AESType::AES_192: cipher = EVP_aes_192_cbc(); break;
+        case AESType::AES_256: cipher = EVP_aes_256_cbc(); break;
+        default:
+            EVP_CIPHER_CTX_free(ctx);
+            throw std::runtime_error("Unsupported AES type");
+    }
+
+    if (EVP_DecryptInit_ex(
+            ctx,
+            cipher,
+            nullptr,
+            config.key.data(),
+            config.iv.data()
+        ) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to initialize AES decryption context");
+    }
+
+    // Allocate enough room: ciphertext size + block size
+    ByteArray plaintext(ciphertext.size() + EVP_CIPHER_block_size(cipher));
+    int len = 0;
+    int plaintext_len = 0;
+
+    if (EVP_DecryptUpdate(
+            ctx,
+            plaintext.data(),
+            &len,
+            ciphertext.data(),
+            static_cast<int>(ciphertext.size())
+        ) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to decrypt AES ciphertext");
+    }
+
+    plaintext_len = len;
+
+    if (EVP_DecryptFinal_ex(ctx, plaintext.data() + plaintext_len, &len) != 1) {
+        EVP_CIPHER_CTX_free(ctx);
+        throw std::runtime_error("Failed to finalize AES decryption (bad key/IV/data?)");
+    }
+
+    plaintext_len += len;
+    plaintext.resize(plaintext_len);
+
+    EVP_CIPHER_CTX_free(ctx);
+    return plaintext;
 }
 
 } // Cryptography

@@ -26,8 +26,6 @@ KeyData generateKey(const size_t key_size) {
         throw std::runtime_error("Could not initialize RSA keygen context");
     }
 
-    std::cout << key_size << std::endl;
-
     if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, key_size) <= 0) {
         throw std::runtime_error("Could not set RSA key size");
     }
@@ -38,6 +36,19 @@ KeyData generateKey(const size_t key_size) {
 
     EVP_PKEY_CTX_free(ctx);
 
+    return KeyData(pkey);
+}
+
+KeyData parseKey(const nlohmann::json& config) {
+    std::string privateKeyPEM = config.at("RSA").at("private_key");
+
+    BIO* bio = BIO_new_mem_buf(privateKeyPEM.data(), privateKeyPEM.size());
+    if (!bio) throw std::runtime_error("Failed to create BIO");
+
+    EVP_PKEY* pkey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
+    if (!pkey) throw std::runtime_error("Failed to load private key");
+
+    BIO_free(bio);
     return KeyData(pkey);
 }
 
@@ -55,7 +66,7 @@ std::string keyToString(const EVP_PKEY* keyPair, const bool isPrivate) {
     return result;
 }
 
-Utils::ByteArray encrypt(const KeyData& config, const std::string& input) {
+Utils::ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input) {
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(config.keyPair, nullptr);
     Utils::ByteArray ciphertext;
 
@@ -82,6 +93,34 @@ Utils::ByteArray encrypt(const KeyData& config, const std::string& input) {
 
     EVP_PKEY_CTX_free(ctx);
     return ciphertext;
+}
+
+Utils::ByteArray decrypt(const KeyData& config, const Utils::ByteArray& ciphertext) {
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(config.keyPair, nullptr);
+    if (!ctx)
+        throw std::runtime_error("Could not create RSA decryption context");
+
+    if (EVP_PKEY_decrypt_init(ctx) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not initialize RSA decryption context");
+    }
+
+    size_t outlen = 0;
+    if (EVP_PKEY_decrypt(ctx, nullptr, &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not determine RSA decryption output size");
+    }
+
+    Utils::ByteArray plaintext(outlen);
+    if (EVP_PKEY_decrypt(ctx, plaintext.data(), &outlen, ciphertext.data(), ciphertext.size()) <= 0) {
+        ERR_print_errors_fp(stderr);
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not decrypt with RSA");
+    }
+
+    plaintext.resize(outlen);
+    EVP_PKEY_CTX_free(ctx);
+    return plaintext;
 }
 
 }

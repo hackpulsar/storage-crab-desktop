@@ -29,11 +29,13 @@ struct KeyData final : Key {
     nlohmann::json toJSON() override;
 };
 
-// Generates AES key with size based on type
 KeyData generateKey(AESType type);
 
-// Encrypts a string and outputs a byte array
-ByteArray encrypt(const KeyData& config, const std::string& input);
+KeyData parseKey(const nlohmann::json& config);
+
+ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input);
+
+ByteArray decrypt(const KeyData& config, const ByteArray& ciphertext);
 
 }
 

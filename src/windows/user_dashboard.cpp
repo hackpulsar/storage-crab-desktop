@@ -6,6 +6,7 @@
 #include <QThread>
 
 #include "windows/upload_dialog.h"
+#include "windows/decrypt_dialog.h"
 #include "windows/login_window.h"
 #include "windows/share_code_dialog.h"
 #include "windows/download_shared_dialog.h"
@@ -32,6 +33,10 @@ UserDashboard::UserDashboard(const std::string& username, QWidget* parent)
     connect(
         ui->uploadButton, &QPushButton::clicked,
         this, &UserDashboard::onUploadButtonClicked
+    );
+    connect(
+        ui->decryptButton, &QPushButton::clicked,
+        this, &UserDashboard::onDecryptButtonClicked
     );
     connect(
         ui->downloadSharedButton, &QPushButton::clicked,
@@ -93,6 +98,25 @@ void UserDashboard::onUploadButtonClicked() {
             this->tryRetrieveFiles();
         }
     );
+}
+
+void UserDashboard::onDecryptButtonClicked() {
+    auto fileDialog = QFileDialog(this);
+    fileDialog.setWindowTitle("Select file to decrypt");
+    fileDialog.setDirectory(QDir::homePath());
+    fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    fileDialog.setFileMode(QFileDialog::ExistingFile);
+    fileDialog.setNameFilter(tr("Encrypted Files (*.enc);;All Files (*)"));
+
+    std::string filePath;
+    if (fileDialog.exec())
+        filePath = fileDialog.selectedFiles().first().toStdString();
+    else return;
+
+    auto *dialog = new DecryptDialog(filePath, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowModality(Qt::WindowModal);
+    dialog->show();
 }
 
 void UserDashboard::onDownloadSharedButtonClicked() {

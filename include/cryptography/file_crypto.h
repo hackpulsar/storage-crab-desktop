@@ -8,9 +8,9 @@
 
 namespace Cryptography {
 
-class FileEncryptor final {
+class FileCrypto final {
 public:
-    struct Options {
+    struct EncryptOptions {
         std::string filePath;
         std::string keyPath;
         AESType aesType;
@@ -19,16 +19,24 @@ public:
         bool encryptFileName;
     };
 
+    struct DecryptOptions {
+        std::string filePath;
+        std::string keyPath;
+        bool decryptFileName;
+    };
+
     struct Result : public ResultBase {
         std::string path;
         std::string fileName;
     };
 
-    static Result encryptFile(const Options& options);
+    static Result encryptFile(const EncryptOptions& options);
+
+    static Result decryptFile(const DecryptOptions& options);
 
 private:
-    // @returns File contents on successfull read, empty string otherwise
-    static std::string readFile(const std::string& path);
+    // @returns File contents on successfull read, empty otherwise
+    static Utils::ByteArray readFile(const std::string& path);
 
     static bool writeFile(const std::string& path, const Utils::ByteArray& data);
 

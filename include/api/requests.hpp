@@ -8,7 +8,6 @@
 #include <curlpp/Options.hpp>
 #include <curlpp/Infos.hpp>
 
-#include <QDebug>
 #include <QDir>
 
 #include "token_pair.h"
