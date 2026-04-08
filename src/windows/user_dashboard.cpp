@@ -101,13 +101,17 @@ void UserDashboard::onUploadButtonClicked() {
 }
 
 void UserDashboard::onDecryptButtonClicked() {
-    const std::string filePath = QFileDialog::getOpenFileName(
-        this,
-        "Select file to upload",
-        QDir::homePath()
-    ).toStdString();
+    auto fileDialog = QFileDialog(this);
+    fileDialog.setWindowTitle("Select file to decrypt");
+    fileDialog.setDirectory(QDir::homePath());
+    fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    fileDialog.setFileMode(QFileDialog::ExistingFile);
+    fileDialog.setNameFilter(tr("Encrypted Files (*.enc);;All Files (*)"));
 
-    if (filePath.empty()) return;
+    std::string filePath;
+    if (fileDialog.exec())
+        filePath = fileDialog.selectedFiles().first().toStdString();
+    else return;
 
     auto *dialog = new DecryptDialog(filePath, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
