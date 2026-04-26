@@ -39,9 +39,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-# Qt packages
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent Test)
-
 # Google Test
 FetchContent_Declare(
         googletest
@@ -50,6 +47,9 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(googletest)
+
+# Qt packages
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent Test)
 
 # Setup sources directories
 set(FORMS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forms)
@@ -94,55 +94,4 @@ target_include_directories(${PROJECT_NAME}
             ${OPENSSL_INCLUDE_DIR}
 )
 
-# Test executable - specify sources directly
-include(GoogleTest)
-
-set(TEST_SOURCES
-    src/api/token_pair.cpp
-    src/cryptography/aes.cpp
-    src/cryptography/rsa.cpp
-    src/cryptography/crypto_service.cpp
-    src/cryptography/file_crypto.cpp
-    tests/logic/token_pair_test.cpp
-    tests/logic/request_result_test.cpp
-    tests/logic/api_urls_test.cpp
-    tests/logic/aes_test.cpp
-    tests/logic/rsa_test.cpp
-    tests/logic/crypto_service_test.cpp
-    tests/logic/file_crypto_test.cpp
-)
-
-add_executable(tests ${TEST_SOURCES})
-
-target_link_libraries(tests PRIVATE
-    GTest::gtest
-    GTest::gtest_main
-    nlohmann_json::nlohmann_json
-    curlpp
-    ${CURL_LIBRARIES}
-    dotenv
-    Qt6::Core
-    ${OPENSSL_LIBRARIES}
-)
-
-target_include_directories(tests PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/dotenv-cpp/include/laserpants
-    ${CURL_INCLUDE_DIR}
-    ${OPENSSL_INCLUDE_DIR}
-)
-
-# Copy test fixtures to build directory
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tmp)
-
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tmp/test.jpg
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/test.jpg
-        ${CMAKE_CURRENT_BINARY_DIR}/tmp/test.jpg
-    COMMENT "Copying test fixtures"
-)
-
-# Enable auto-discovery with Qt offscreen platform
-set(GTEST_DISCOVER_TESTS_VERBOSE ON)
-gtest_discover_tests(tests)
+add_subdirectory(tests)
