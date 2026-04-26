@@ -40,7 +40,16 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(nlohmann_json)
 
 # Qt packages
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent Test)
+
+# Google Test
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(googletest)
 
 # Setup sources directories
 set(FORMS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forms)
@@ -60,7 +69,7 @@ find_package(OpenSSL REQUIRED)
 add_subdirectory(deps)
 
 # Add the executable based on platform
-if (WIN32)
+if(WIN32)
     add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS} ${FORMS})
 elseif(UNIX)
     add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS})
@@ -85,12 +94,35 @@ target_include_directories(${PROJECT_NAME}
             ${OPENSSL_INCLUDE_DIR}
 )
 
-# Custom command to copy .env file to the build directory
-# Executes only on successful build
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${CMAKE_SOURCE_DIR}/.env
-                ${CMAKE_CURRENT_BINARY_DIR}/.env
-        COMMENT "Copying .env to build directory"
+# Test executable - specify sources directly
+include(GoogleTest)
+
+set(TEST_SOURCES
+    src/api/token_pair.cpp
+    tests/logic/token_pair_test.cpp
+    tests/logic/request_result_test.cpp
+    tests/logic/api_urls_test.cpp
 )
+
+add_executable(tests ${TEST_SOURCES})
+
+target_link_libraries(tests PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    nlohmann_json::nlohmann_json
+    curlpp
+    ${CURL_LIBRARIES}
+    dotenv
+    Qt6::Core
+)
+
+target_include_directories(tests PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/dotenv-cpp/include/laserpants
+    ${CURL_INCLUDE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
+)
+
+# Enable auto-discovery with Qt offscreen platform
+set(GTEST_DISCOVER_TESTS_VERBOSE ON)
+gtest_discover_tests(tests)
