@@ -18,7 +18,7 @@ struct RequestResult : public ResultBase {
     // @returns Error details string if the request was not successful,
     // otherwise returns an empty string
     std::string extractErrorDetails() const { 
-        if (!ok)
+        if (!ok && !body.empty())
             return body.at("details").get<std::string>();
         return "";
     }

@@ -72,7 +72,11 @@ TEST_F(AESTest, KeyDataToJSON) {
     
     EXPECT_TRUE(json.contains("type"));
     EXPECT_TRUE(json.contains("AES"));
+    EXPECT_TRUE(json["AES"].contains("key"));
+    EXPECT_TRUE(json["AES"].contains("iv"));
+    EXPECT_TRUE(json["AES"].contains("type"));
     EXPECT_EQ(json["type"], "AES");
+    EXPECT_EQ(json["AES"]["type"], AESType::AES_256);
 }
 
 TEST_F(AESTest, ParseKeyFromJSON) {
@@ -83,4 +87,5 @@ TEST_F(AESTest, ParseKeyFromJSON) {
     
     EXPECT_EQ(parsed.key.size(), original.key.size());
     EXPECT_EQ(parsed.iv.size(), original.iv.size());
+    EXPECT_EQ(parsed.type, AESType::AES_256);
 }
