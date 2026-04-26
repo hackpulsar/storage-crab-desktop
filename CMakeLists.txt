@@ -99,9 +99,17 @@ include(GoogleTest)
 
 set(TEST_SOURCES
     src/api/token_pair.cpp
+    src/cryptography/aes.cpp
+    src/cryptography/rsa.cpp
+    src/cryptography/crypto_service.cpp
+    src/cryptography/file_crypto.cpp
     tests/logic/token_pair_test.cpp
     tests/logic/request_result_test.cpp
     tests/logic/api_urls_test.cpp
+    tests/logic/aes_test.cpp
+    tests/logic/rsa_test.cpp
+    tests/logic/crypto_service_test.cpp
+    tests/logic/file_crypto_test.cpp
 )
 
 add_executable(tests ${TEST_SOURCES})
@@ -114,6 +122,7 @@ target_link_libraries(tests PRIVATE
     ${CURL_LIBRARIES}
     dotenv
     Qt6::Core
+    ${OPENSSL_LIBRARIES}
 )
 
 target_include_directories(tests PUBLIC
@@ -121,6 +130,17 @@ target_include_directories(tests PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/dotenv-cpp/include/laserpants
     ${CURL_INCLUDE_DIR}
     ${OPENSSL_INCLUDE_DIR}
+)
+
+# Copy test fixtures to build directory
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tmp)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tmp/test.jpg
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/test.jpg
+        ${CMAKE_CURRENT_BINARY_DIR}/tmp/test.jpg
+    COMMENT "Copying test fixtures"
 )
 
 # Enable auto-discovery with Qt offscreen platform
