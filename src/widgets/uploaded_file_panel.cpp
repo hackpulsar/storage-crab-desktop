@@ -14,6 +14,9 @@ UploadedFilePanel::UploadedFilePanel(
 {
     ui->setupUi(this);
 
+    ui->filenameLabel->setText(fileData.name.c_str());
+    ui->pathLabel->setText(fileData.path.c_str());
+
     // Set widget background color
     QPalette pal = palette();
     pal.setColor(
@@ -52,22 +55,22 @@ UploadedFilePanel::~UploadedFilePanel() {
     delete ui;
 }
 
+QString UploadedFilePanel::elideText(const QString& text, const QFont& font, int width) const {
+    return QFontMetrics(font).elidedText(text, Qt::ElideMiddle, width);
+}
+
 void UploadedFilePanel::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 
-    ui->pathLabel->setText(
-        QFontMetrics(ui->pathLabel->font()).elidedText(
-            QString::fromStdString(this->fileData.path),
-            Qt::ElideMiddle,
-            ui->pathLabel->width()
-        )
-    );
+    ui->pathLabel->setText(elideText(
+        fileData.path.c_str(),
+        ui->pathLabel->font(),
+        ui->pathLabel->width()
+    ));
 
-    ui->filenameLabel->setText(
-        QFontMetrics(ui->filenameLabel->font()).elidedText(
-            QString::fromStdString(this->fileData.name),
-            Qt::ElideMiddle,
-            ui->filenameLabel->width()
-        )
-    );
+    ui->pathLabel->setText(elideText(
+        fileData.name.c_str(),
+        ui->filenameLabel->font(),
+        ui->filenameLabel->width()
+    ));
 }
