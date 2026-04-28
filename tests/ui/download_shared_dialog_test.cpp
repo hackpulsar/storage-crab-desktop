@@ -17,13 +17,11 @@ protected:
     std::unique_ptr<DownloadSharedDialog> dialog;
 };
 
-TEST_F(DownloadSharedDialogTest, HasCodeLineEdit) {
+TEST_F(DownloadSharedDialogTest, HasControls) {
     QLineEdit* codeLineEdit = dialog->findChild<QLineEdit*>("codeLineEdit");
-    ASSERT_NE(codeLineEdit, nullptr);
-}
-
-TEST_F(DownloadSharedDialogTest, HasDownloadButton) {
     QPushButton* downloadButton = dialog->findChild<QPushButton*>("downloadButton");
+    
+    ASSERT_NE(codeLineEdit, nullptr);
     ASSERT_NE(downloadButton, nullptr);
 }
 

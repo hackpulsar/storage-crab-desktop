@@ -24,6 +24,16 @@ protected:
     std::unique_ptr<UploadedFilePanel> panel;
 };
 
+TEST_F(UploadedFilePanelTest, HasButtons) {
+    QPushButton* shareButton = panel->findChild<QPushButton*>("shareButton");
+    QPushButton* downloadButton = panel->findChild<QPushButton*>("downloadButton");
+    QPushButton* deleteButton = panel->findChild<QPushButton*>("deleteButton");
+
+    ASSERT_NE(shareButton, nullptr);
+    ASSERT_NE(downloadButton, nullptr);
+    ASSERT_NE(deleteButton, nullptr);
+}
+
 TEST_F(UploadedFilePanelTest, PopulatesLabelsFromFileData) {
     panel->resize(2000, 77); // Resize to avoid elision.
 
