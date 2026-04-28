@@ -2,12 +2,13 @@ include (GoogleTest)
 
 file(GLOB_RECURSE UI_TESTS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/*_test.cpp)
 
-set(UI_TESTS_DEPS_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/widgets/uploaded_file_panel.h
+file(GLOB_RECURSE UI_TESTS_DEPS_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/*/*.h
+    ${CMAKE_SOURCE_DIR}/include/*/*.hpp
 )
 
-set(UI_TESTS_DEPS_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/widgets/uploaded_file_panel.cpp
+file(GLOB_RECURSE UI_TESTS_DEPS_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/*/*.cpp
 )
 
 set(FORMS_DIR ${CMAKE_SOURCE_DIR}/forms)
@@ -28,8 +29,13 @@ add_executable(ui_tests
 target_link_libraries(ui_tests PRIVATE
     Qt6::Core
     Qt6::Widgets
+    Qt6::Concurrent
     Qt6::Test
     GTest::gtest
+    curlpp
+    dotenv
+    ${CURL_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
 )
 
 target_include_directories(ui_tests PUBLIC

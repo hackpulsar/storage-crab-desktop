@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <QApplication>
 #include <QTest>
 #include <QSignalSpy>
 #include <QLabel>
@@ -90,7 +89,6 @@ TEST_F(UploadedFilePanelTest, ElidesLongFilename) {
     QString result = panel->elideText(longNameData.name.c_str(), pathLabel->font(), 50);
 
     EXPECT_NE(result, longNameData.name);
-    qDebug() << "res: " << result << ", old: " << longNameData.name;
     EXPECT_TRUE(result.contains("…"));
 }
 

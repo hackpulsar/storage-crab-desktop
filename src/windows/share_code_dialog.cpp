@@ -53,7 +53,6 @@ ShareCodeDialog::ShareCodeDialog(const std::string code, const size_t fileID, QW
 
     connect(ui->copyButton, &QPushButton::clicked, this, &ShareCodeDialog::onCopyClicked);
     connect(ui->refreshButton, &QPushButton::clicked, this, &ShareCodeDialog::onRefreshClicked);
-
 }
 
 ShareCodeDialog::~ShareCodeDialog() = default;
