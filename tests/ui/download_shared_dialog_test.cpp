@@ -28,8 +28,6 @@ TEST_F(DownloadSharedDialogTest, HasControls) {
 TEST_F(DownloadSharedDialogTest, DownloadButtonEmptyCode) {
     QLineEdit* codeLineEdit = dialog->findChild<QLineEdit*>("codeLineEdit");
     QPushButton* downloadButton = dialog->findChild<QPushButton*>("downloadButton");
-    ASSERT_NE(codeLineEdit, nullptr);
-    ASSERT_NE(downloadButton, nullptr);
 
     codeLineEdit->setText("");
 
