@@ -12,7 +12,7 @@
 #include "watch_future.hpp"
 
 UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
-    : QDialog(parent), ui(new Ui::UploadDialog), filePath(std::move(filePath))
+    : QDialog(parent), ui(std::make_unique<Ui::UploadDialog>()), filePath(std::move(filePath))
 {
     ui->setupUi(this);
 
@@ -50,9 +50,7 @@ UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
     );
 }
 
-UploadDialog::~UploadDialog() {
-    delete ui;
-}
+UploadDialog::~UploadDialog() = default;
 
 void UploadDialog::onChooseFilePathButtonClicked() {
     // Reading file path
