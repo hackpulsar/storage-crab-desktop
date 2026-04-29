@@ -16,6 +16,11 @@ FetchContent_Declare(
     GIT_SHALLOW ON
 )
 FetchContent_MakeAvailable(curlpp)
+# suppress warnings
+target_compile_options(curlpp PRIVATE -Wno-deprecated-declarations)
+set_target_properties(curlpp PROPERTIES
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${curlpp_SOURCE_DIR}/include"
+)
 
 # nlohmann_json
 FetchContent_Declare(
