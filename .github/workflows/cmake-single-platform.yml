@@ -16,8 +16,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Qt
-      run: sudo apt-get install -y qt6-base-dev qt6-tools-dev libqt6core6 libqt6gui6 libqt6widgets6
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --fix-missing \
+        cmake \
+        build-essential \
+        libgl1-mesa-dev \
+        libcurl4-openssl-dev \
+        libssl-dev \
+        qt6-base-dev \
+        libqt6concurrent6 \
+        qt6-base-dev-tools
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
