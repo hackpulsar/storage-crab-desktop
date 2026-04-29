@@ -16,12 +16,19 @@ FetchContent_Declare(
     GIT_SHALLOW ON
 )
 FetchContent_MakeAvailable(curlpp)
+
 # suppress warnings
+
 foreach(target curlpp curlpp_static)
     if(TARGET ${target})
         target_compile_options(${target} PRIVATE -Wno-deprecated-declarations)
     endif()
 endforeach()
+
+get_target_property(CURLPP_INCLUDES curlpp INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(curlpp PROPERTIES
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${CURLPP_INCLUDES}"
+)
 
 # nlohmann_json
 FetchContent_Declare(
