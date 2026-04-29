@@ -25,6 +25,8 @@ jobs:
         cmake \
         build-essential \
         clang-17 \
+        libc++-17-dev \
+        libc++abi-17-dev \
         libgl1-mesa-dev \
         libcurl4-openssl-dev \
         libssl-dev \
@@ -33,7 +35,7 @@ jobs:
         qt6-base-dev-tools
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=clang++-17 -DCMAKE_C_COMPILER=clang-17
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
     - name: Build
       working-directory: ${{github.workspace}}/build
