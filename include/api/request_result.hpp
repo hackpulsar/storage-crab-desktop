@@ -10,10 +10,15 @@ namespace API {
 struct RequestResult : public ResultBase {
     nlohmann::json body;
 
-    static RequestResult success(const nlohmann::json &body) { return RequestResult{ { .ok = true }, .body = body }; }
-    static RequestResult success() { return RequestResult{{ .ok = true }, .body = nlohmann::json() }; }
-    static RequestResult error(const nlohmann::json &body) { return RequestResult{ { .ok = false }, .body = body }; }
-    static RequestResult error_msg(const std::string& msg) { return RequestResult{ { .ok = false }, .body = {{"details", msg}} }; }
+    RequestResult(bool ok, nlohmann::json body = {}) {
+        this->ok = ok;
+        this->body = std::move(body);
+    }
+
+    static RequestResult success(const nlohmann::json &body) { return RequestResult{ true, body }; }
+    static RequestResult success() { return RequestResult{ true }; }
+    static RequestResult error(const nlohmann::json &body) { return RequestResult{ false, body }; }
+    static RequestResult error_msg(const std::string& msg) { return RequestResult{ false, {{"details", msg}} }; }
 
     // @returns Error details string if the request was not successful,
     // otherwise returns an empty string

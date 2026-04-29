@@ -28,6 +28,12 @@ public:
     struct Result : public ResultBase {
         std::string path;
         std::string fileName;
+
+        Result(bool ok, std::string path = {}, std::string fileName = {}) {
+            this->ok = ok;
+            this->path = std::move(path);
+            this->fileName = std::move(fileName);
+        }
     };
 
     static Result encryptFile(const EncryptOptions& options);

@@ -27,7 +27,7 @@ FileCrypto::Result FileCrypto::encryptFile(const EncryptOptions& opts) {
             rsaKeySize, opts.encryptFileName
         );
     } catch (std::exception&) {
-        return Result { { .ok = false } }; // empty failure
+        return Result { false }; // empty failure
     }
 
     // Save config
@@ -38,11 +38,7 @@ FileCrypto::Result FileCrypto::encryptFile(const EncryptOptions& opts) {
     const std::string outPath = buildOutputPath(opts.filePath, result.encryptedFileName + "." + fileExtension + ".enc");
     writeFile(outPath, result.encryptedContent);
 
-    return Result {
-        { .ok = true },
-        .path       = outPath, 
-        .fileName   = result.encryptedFileName + "." + fileExtension
-    };
+    return Result { true, outPath, result.encryptedFileName + "." + fileExtension };
 }
 
 FileCrypto::Result FileCrypto::decryptFile(const DecryptOptions& opts) {
@@ -65,7 +61,7 @@ FileCrypto::Result FileCrypto::decryptFile(const DecryptOptions& opts) {
     try {
         result = CryptoService::Decrypt(content, fileName, config, opts.decryptFileName);
     } catch (std::exception&) {
-        return Result { { .ok = false } }; // empty failure
+        return Result { false }; // empty failure
     }
 
     // Build output path and write
@@ -73,9 +69,9 @@ FileCrypto::Result FileCrypto::decryptFile(const DecryptOptions& opts) {
     writeFile(outPath, result.content);
 
     return Result {
-        { .ok = true },
-        .path       = outPath, 
-        .fileName   = std::string(result.decryptedFileName.begin(), result.decryptedFileName.end()) + "." + fileExtension
+        true,
+        outPath,
+        std::string(result.decryptedFileName.begin(), result.decryptedFileName.end()) + "." + fileExtension
     };
 }
 
