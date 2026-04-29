@@ -98,7 +98,7 @@ TEST_F(UploadedFilePanelTest, ElidesLongFilename) {
     QLabel* pathLabel = longPanel.findChild<QLabel*>("pathLabel");
     QString result = panel->elideText(longNameData.name.c_str(), pathLabel->font(), 50);
 
-    EXPECT_NE(result, longNameData.name);
+    EXPECT_NE(result.toStdString(), longNameData.name);
     EXPECT_TRUE(result.contains("…"));
 }
 
