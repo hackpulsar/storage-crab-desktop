@@ -24,6 +24,7 @@ jobs:
         sudo apt-get install -y --fix-missing \
         cmake \
         build-essential \
+        clang-17 \
         libgl1-mesa-dev \
         libcurl4-openssl-dev \
         libssl-dev \
@@ -32,7 +33,7 @@ jobs:
         qt6-base-dev-tools
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=clang++-17 -DCMAKE_C_COMPILER=clang-17
 
     - name: Build
       working-directory: ${{github.workspace}}/build
