@@ -36,6 +36,7 @@ target_link_libraries(ui_tests PRIVATE
     dotenv
     ${CURL_LIBRARIES}
     ${OPENSSL_LIBRARIES}
+    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(ui_tests PUBLIC
