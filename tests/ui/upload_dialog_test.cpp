@@ -59,7 +59,7 @@ TEST_F(UploadDialogTest, HasControls) {
 }
 
 TEST_F(UploadDialogTest, PopulatesFilePath) {
-    EXPECT_EQ(filePathLineEdit->text(), "/path/to/a/file");
+    EXPECT_EQ(filePathLineEdit->text().toStdString(), "/path/to/a/file");
 }
 
 TEST_F(UploadDialogTest, AlgorithmTypes) {
@@ -99,7 +99,7 @@ TEST_F(UploadDialogTest, EmptyFieldsError) {
         for (QWidget* widget : widgets) {
             if (QMessageBox* mb = qobject_cast<QMessageBox*>(widget)) {
                 messageBoxShown = true;
-                EXPECT_EQ(mb->text(), "Please fill all the fields");
+                EXPECT_EQ(mb->text().toStdString(), "Please fill all the fields");
                 mb->close();
             }
         }
@@ -116,7 +116,7 @@ TEST_F(UploadDialogTest, EmptyFieldsError) {
         for (QWidget* widget : widgets) {
             if (QMessageBox* mb = qobject_cast<QMessageBox*>(widget)) {
                 messageBoxShown = true;
-                EXPECT_EQ(mb->text(), "Please fill all the fields");
+                EXPECT_EQ(mb->text().toStdString(), "Please fill all the fields");
                 mb->close();
             }
         }

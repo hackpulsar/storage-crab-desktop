@@ -38,7 +38,7 @@ TEST_F(DownloadSharedDialogTest, DownloadButtonEmptyCode) {
         for (QWidget* widget : widgets) {
             if (QMessageBox* mb = qobject_cast<QMessageBox*>(widget)) {
                 messageBoxShown = true;
-                EXPECT_EQ(mb->text(), "Please fill all the fields");
+                EXPECT_EQ(mb->text().toStdString(), "Please fill all the fields");
                 mb->close();
             }
         }

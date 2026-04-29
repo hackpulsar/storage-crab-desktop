@@ -43,14 +43,14 @@ TEST_F(LoginWindowTest, CorrectTitle) {
     QLabel* titleLabel = window->findChild<QLabel*>("titleLabel");
     QLabel* subtitleLabel = window->findChild<QLabel*>("subtitleLabel");
 
-    EXPECT_EQ(titleLabel->text(), "Storage Crab");
-    EXPECT_EQ(subtitleLabel->text(), "\360\237\246\200");
+    EXPECT_EQ(titleLabel->text().toStdString(), "Storage Crab");
+    EXPECT_EQ(subtitleLabel->text().toStdString(), "\360\237\246\200");
 }
 
 TEST_F(LoginWindowTest, TimeoutMessageShows) {
     QTest::mouseClick(loginButton, Qt::LeftButton);
     QTest::qWait(100); // wait for request to fail
-    EXPECT_EQ(errorLabel->text(), "Request timed out");
+    EXPECT_EQ(errorLabel->text().toStdString(), "Request timed out");
 }
 
 TEST_F(LoginWindowTest, EmptyFieldsError) {
@@ -59,12 +59,12 @@ TEST_F(LoginWindowTest, EmptyFieldsError) {
 
     QTest::mouseClick(loginButton, Qt::LeftButton);
     QTest::qWait(100); // wait for request to fail
-    EXPECT_EQ(errorLabel->text(), "Please fill the fields below");
+    EXPECT_EQ(errorLabel->text().toStdString(), "Please fill the fields below");
 }
 
 TEST_F(LoginWindowTest, LoginButtonResets) {
     QTest::mouseClick(loginButton, Qt::LeftButton);
     EXPECT_TRUE(loginButton->text().isEmpty());
     QTest::qWait(100); // wait for request to fail
-    EXPECT_EQ(loginButton->text(), "Login");
+    EXPECT_EQ(loginButton->text().toStdString(), "Login");
 }

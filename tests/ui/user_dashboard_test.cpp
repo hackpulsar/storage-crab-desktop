@@ -47,7 +47,7 @@ TEST_F(UserDashboardTest, HasControls) {
 }
 
 TEST_F(UserDashboardTest, PopulatesUsername) {
-    EXPECT_EQ(window->findChild<QLabel*>("usernameLabel")->text(), "some_username");
+    EXPECT_EQ(window->findChild<QLabel*>("usernameLabel")->text().toStdString(), "some_username");
 }
 
 TEST_F(UserDashboardTest, UploadedFilesAppear) {
@@ -73,7 +73,7 @@ TEST_F(UserDashboardTest, LogoutClosesWithWarning) {
         for (QWidget* widget : widgets) {
             if (QMessageBox* mb = qobject_cast<QMessageBox*>(widget)) {
                 messageBoxShown = true;
-                EXPECT_EQ(mb->text(), "Are you sure you want to logout?");
+                EXPECT_EQ(mb->text().toStdString(), "Are you sure you want to logout?");
                 mb->button(QMessageBox::Yes)->click();
             }
         }

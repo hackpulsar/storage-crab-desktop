@@ -41,9 +41,9 @@ TEST_F(UploadedFilePanelTest, PopulatesLabelsFromFileData) {
     QLabel* pathLabel = panel->findChild<QLabel*>("pathLabel");
     QLabel* sizeLabel = panel->findChild<QLabel*>("sizeLabel");
 
-    EXPECT_EQ(filenameLabel->text(), QString::fromStdString(fileData.name));
-    EXPECT_EQ(pathLabel->text(), QString::fromStdString(fileData.path));
-    EXPECT_EQ(sizeLabel->text(), std::to_string(fileData.size / (1000.f * 1000.f)) + "mb");
+    EXPECT_EQ(filenameLabel->text().toStdString(), fileData.name);
+    EXPECT_EQ(pathLabel->text().toStdString(), fileData.path);
+    EXPECT_EQ(sizeLabel->text().toStdString(), std::to_string(fileData.size / (1000.f * 1000.f)) + "mb");
 }
 
 TEST_F(UploadedFilePanelTest, ShareButtonEmits) {
