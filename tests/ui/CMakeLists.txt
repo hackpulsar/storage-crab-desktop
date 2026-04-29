@@ -44,5 +44,9 @@ target_include_directories(ui_tests PUBLIC
     ${CMAKE_SOURCE_DIR}/src
 )
 
+target_compile_definitions(ui_tests PRIVATE
+    ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets"
+)
+
 set(GTEST_DISCOVER_TESTS_VERBOSE ON)
 gtest_discover_tests(ui_tests)
