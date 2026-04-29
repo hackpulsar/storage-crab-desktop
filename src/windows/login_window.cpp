@@ -22,7 +22,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     ui->passwordLineEdit->setText("admin");
 
     loadingAnimation = new QMovie(this);
-    loadingAnimation->setFileName("../assets/loading.gif");
+    loadingAnimation->setFileName(QString(ASSETS_PATH) + "/loading.gif");
 
     connect(ui->loginButton, &QPushButton::clicked, this, &LoginWindow::onLoginButtonClicked);
 }

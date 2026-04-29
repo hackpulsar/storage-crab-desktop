@@ -31,9 +31,9 @@ UploadedFilePanel::UploadedFilePanel(
         std::to_string(fileData.size / (1000.f * 1000.f)) + "mb"
     ));
 
-    ui->shareButton->setIcon(QIcon("../assets/share.png"));
-    ui->downloadButton->setIcon(QIcon("../assets/download.png"));
-    ui->deleteButton->setIcon(QIcon("../assets/delete.png"));
+    ui->shareButton->setIcon(QIcon(QString(ASSETS_PATH) + "/share.png"));
+    ui->downloadButton->setIcon(QIcon(QString(ASSETS_PATH) + "/download.png"));
+    ui->deleteButton->setIcon(QIcon(QString(ASSETS_PATH) + "/delete.png"));
 
     connect(
         ui->shareButton, &QPushButton::clicked,

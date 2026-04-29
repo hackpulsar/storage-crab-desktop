@@ -19,7 +19,7 @@ UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
     ui->filePathLineEdit->setText(QString::fromStdString(this->filePath));
 
     loadingAnimation = new QMovie(this);
-    loadingAnimation->setFileName("../assets/loading.gif");
+    loadingAnimation->setFileName(QString(ASSETS_PATH) + "/loading.gif");
 
     connect(
        ui->algorithmComboBox, &QComboBox::currentTextChanged,
