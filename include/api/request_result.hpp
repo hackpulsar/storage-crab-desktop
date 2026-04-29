@@ -2,7 +2,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "result_base.hpp"
+#include "utils/result_base.hpp"
 
 namespace API {
 

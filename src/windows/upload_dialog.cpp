@@ -9,7 +9,7 @@
 #include "api/api_dispatcher.hpp"
 #include "windows/user_dashboard.h"
 #include "cryptography/file_crypto.h"
-#include "watch_future.hpp"
+#include "utils/watch_future.hpp"
 
 UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
     : QDialog(parent), ui(std::make_unique<Ui::UploadDialog>()), filePath(std::move(filePath))

@@ -5,7 +5,7 @@
 #include <QMessageBox>
 
 #include "cryptography/file_crypto.h"
-#include "watch_future.hpp"
+#include "utils/watch_future.hpp"
 
 DecryptDialog::DecryptDialog(const std::string& filePath, QWidget* parent) 
     : QDialog(parent), ui(std::make_unique<Ui::DecryptDialog>()), filePath(filePath)

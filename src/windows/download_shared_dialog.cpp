@@ -8,7 +8,7 @@
 #include <QThreadPool>
 
 #include "api/api_dispatcher.hpp"
-#include "watch_future.hpp"
+#include "utils/watch_future.hpp"
 
 DownloadSharedDialog::DownloadSharedDialog(QWidget* parent) 
     : QDialog(parent), ui(std::make_unique<Ui::DownloadSharedDialog>())

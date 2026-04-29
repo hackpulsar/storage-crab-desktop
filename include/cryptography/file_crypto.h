@@ -4,7 +4,7 @@
 
 #include "utils/byte_array.hpp"
 #include "algorithm_types.h"
-#include "result_base.hpp"
+#include "utils/result_base.hpp"
 
 namespace Cryptography {
 

@@ -13,7 +13,7 @@
 #include "widgets/uploaded_file_panel.h"
 
 #include "api/api_dispatcher.hpp"
-#include "watch_future.hpp"
+#include "utils/watch_future.hpp"
 
 UserDashboard::UserDashboard(const std::string& username, bool autoRetrieve, QWidget* parent)
     : QMainWindow(parent), ui(std::make_unique<Ui::UserDashboard>())

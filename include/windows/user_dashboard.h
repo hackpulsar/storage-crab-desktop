@@ -2,7 +2,6 @@
 #define USER_DASHBOARD_H
 
 #include <QMainWindow>
-#include <ui_user_dashboard.h>
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QPushButton>
@@ -15,7 +14,7 @@
 #include "widgets/uploaded_file_panel.h"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui { class UserDashboard; }
 QT_END_NAMESPACE
 
 class UserDashboard final : public QMainWindow {
