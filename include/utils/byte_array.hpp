@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iomanip>
+#include <cstdint>
 #include <sstream>
 
 namespace Utils {

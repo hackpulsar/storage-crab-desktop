@@ -24,9 +24,6 @@ jobs:
         sudo apt-get install -y --fix-missing \
         cmake \
         build-essential \
-        clang-17 \
-        libc++-17-dev \
-        libc++abi-17-dev \
         libgl1-mesa-dev \
         libcurl4-openssl-dev \
         libssl-dev \
