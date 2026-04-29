@@ -15,8 +15,8 @@
 #include "api/api_dispatcher.hpp"
 #include "watch_future.hpp"
 
-UserDashboard::UserDashboard(const std::string& username, QWidget* parent)
-    : QMainWindow(parent), ui(new Ui::UserDashboard)
+UserDashboard::UserDashboard(const std::string& username, bool autoRetrieve, QWidget* parent)
+    : QMainWindow(parent), ui(std::make_unique<Ui::UserDashboard>())
 {
     ui->setupUi(this);
 
@@ -24,7 +24,7 @@ UserDashboard::UserDashboard(const std::string& username, QWidget* parent)
     this->setWindowTitle(QString::fromStdString(username + "'s dashboard"));
     ui->usernameLabel->setText(username.c_str());
 
-    this->tryRetrieveFiles();
+    if (autoRetrieve) this->tryRetrieveFiles();
 
     connect(
         ui->logoutButton, &QPushButton::clicked,
@@ -52,8 +52,26 @@ UserDashboard::UserDashboard(const std::string& username, QWidget* parent)
     );
 }
 
-UserDashboard::~UserDashboard() {
-    delete ui;
+UserDashboard::~UserDashboard() = default;
+
+void UserDashboard::addFile(FileData data) {
+    auto panel = new UploadedFilePanel(data, ui->scrollArea);
+
+    connect(
+        panel, &UploadedFilePanel::shareButtonPressed,
+        this, &UserDashboard::onShareFile
+    );
+    connect(
+        panel, &UploadedFilePanel::downloadButtonPressed,
+        this, &UserDashboard::onFileDownload
+    );
+    connect(
+        panel, &UploadedFilePanel::deleteButtonPressed,
+        this, &UserDashboard::onFileDelete
+    );
+
+    uploadedFilePanels.push_back(panel);
+    ui->middlePanelLayout->insertWidget(ui->middlePanelLayout->count() - 1, uploadedFilePanels.back());
 }
 
 void UserDashboard::onLogoutButtonClicked() {
@@ -196,31 +214,12 @@ void UserDashboard::tryRetrieveFiles() {
             uploadedFilePanels.clear();
 
             for (const auto& file_data : response.body) {
-                auto panel = new UploadedFilePanel(
-                    FileData {
-                        file_data.at("filename"),
-                        file_data.at("path"),
-                        file_data.at("size").get<size_t>(),
-                        file_data.at("id").get<size_t>(),
-                    },
-                    ui->scrollArea
-                );
-
-                connect(
-                    panel, &UploadedFilePanel::shareButtonPressed,
-                    this, &UserDashboard::onShareFile
-                );
-                connect(
-                    panel, &UploadedFilePanel::downloadButtonPressed,
-                    this, &UserDashboard::onFileDownload
-                );
-                connect(
-                    panel, &UploadedFilePanel::deleteButtonPressed,
-                    this, &UserDashboard::onFileDelete
-                );
-
-                uploadedFilePanels.push_back(panel);
-                ui->middlePanelLayout->insertWidget(ui->middlePanelLayout->count() - 1, uploadedFilePanels.back());
+                this->addFile(FileData {
+                    file_data.at("filename"),
+                    file_data.at("path"),
+                    file_data.at("size").get<size_t>(),
+                    file_data.at("id").get<size_t>(),
+                });
             }
         },
         [this](const API::RequestResult& response) {

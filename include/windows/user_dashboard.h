@@ -22,8 +22,10 @@ class UserDashboard final : public QMainWindow {
 Q_OBJECT
 
 public:
-    UserDashboard(const std::string& username, QWidget *parent = nullptr);
+    UserDashboard(const std::string& username, bool autoRetrieve = true, QWidget *parent = nullptr);
     ~UserDashboard() override;
+
+    void addFile(FileData data);
 
 private slots:
     void onLogoutButtonClicked();
@@ -45,7 +47,7 @@ private:
 
     void tryRetrieveFiles();
 
-    Ui::UserDashboard *ui;
+    std::unique_ptr<Ui::UserDashboard> ui;
 
     std::vector<UploadedFilePanel*> uploadedFilePanels;
 
