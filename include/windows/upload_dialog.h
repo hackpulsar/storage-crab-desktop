@@ -30,7 +30,7 @@ private:
 
     void resetUploadButton();
 
-    Ui::UploadDialog *ui;
+    std::unique_ptr<Ui::UploadDialog> ui;
 
     std::string filePath;
 

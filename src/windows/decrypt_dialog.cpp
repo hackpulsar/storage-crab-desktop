@@ -15,7 +15,7 @@ DecryptDialog::DecryptDialog(const std::string& filePath, QWidget* parent)
     ui->filePathLineEdit->setText(filePath.c_str());
 
     loadingAnimation = new QMovie(this);
-    loadingAnimation->setFileName("../assets/loading.gif");
+    loadingAnimation->setFileName(QString(ASSETS_PATH) + "/loading.gif");
 
     connect(
         ui->cancelButton, &QPushButton::clicked,

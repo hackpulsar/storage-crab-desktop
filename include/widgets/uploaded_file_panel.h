@@ -22,6 +22,8 @@ public:
     );
     ~UploadedFilePanel() override;
 
+    QString elideText(const QString& text, const QFont& font, int width) const;
+
 signals:
     void shareButtonPressed(size_t file_id);
     void downloadButtonPressed(const FileData &fileData);

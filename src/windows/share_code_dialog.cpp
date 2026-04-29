@@ -15,9 +15,9 @@ ShareCodeDialog::ShareCodeDialog(const std::string code, const size_t fileID, QW
 {
     ui->setupUi(this);
 
-    this->copyIcon = QIcon("../assets/copy.png");
-    this->clickedIcon = QIcon("../assets/check.png");
-    this->refreshIcon = QIcon("../assets/refresh.png");
+    this->copyIcon = QIcon(QString(ASSETS_PATH) + "/copy.png");
+    this->clickedIcon = QIcon(QString(ASSETS_PATH) + "/check.png");
+    this->refreshIcon = QIcon(QString(ASSETS_PATH) + "/refresh.png");
 
     copyTimer = new QTimer(this);
     displayTimer = new QTimer(this);
@@ -53,7 +53,6 @@ ShareCodeDialog::ShareCodeDialog(const std::string code, const size_t fileID, QW
 
     connect(ui->copyButton, &QPushButton::clicked, this, &ShareCodeDialog::onCopyClicked);
     connect(ui->refreshButton, &QPushButton::clicked, this, &ShareCodeDialog::onRefreshClicked);
-
 }
 
 ShareCodeDialog::~ShareCodeDialog() = default;

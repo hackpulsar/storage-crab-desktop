@@ -39,8 +39,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+# Google Test
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.14.0
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(googletest)
+
 # Qt packages
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Concurrent Test)
 
 # Setup sources directories
 set(FORMS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/forms)
@@ -60,7 +69,7 @@ find_package(OpenSSL REQUIRED)
 add_subdirectory(deps)
 
 # Add the executable based on platform
-if (WIN32)
+if(WIN32)
     add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${HEADERS} ${FORMS})
 elseif(UNIX)
     add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS} ${FORMS})
@@ -85,12 +94,8 @@ target_include_directories(${PROJECT_NAME}
             ${OPENSSL_INCLUDE_DIR}
 )
 
-# Custom command to copy .env file to the build directory
-# Executes only on successful build
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${CMAKE_SOURCE_DIR}/.env
-                ${CMAKE_CURRENT_BINARY_DIR}/.env
-        COMMENT "Copying .env to build directory"
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    ASSETS_PATH="${CMAKE_SOURCE_DIR}/assets"
 )
+
+add_subdirectory(tests)
