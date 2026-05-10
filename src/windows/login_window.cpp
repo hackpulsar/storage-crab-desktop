@@ -44,9 +44,9 @@ void LoginWindow::onLoginButtonClicked() {
     loadingAnimation->start();
 
     const std::string email = ui->emailLineEdit->text().toStdString();
-    const std::string pass_hash = ui->passwordLineEdit->text().toStdString();
+    const std::size_t pass_hash = std::hash<std::string>{}(ui->passwordLineEdit->text().toStdString());
     watchFuture(
-        this, ApiDispatcher::instance().login(email, pass_hash),
+        this, ApiDispatcher::instance().login(email, std::to_string(pass_hash)),
         [this](const API::RequestResult& response) { this->onLoginSuccessfull(response); },
         [this](const API::RequestResult& response) {
             ui->errorLabel->setText(QString::fromStdString(response.extractErrorDetails()));
