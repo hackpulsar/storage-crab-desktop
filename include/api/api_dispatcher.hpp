@@ -27,6 +27,8 @@ public:
     
     RequestResultFuture login(const std::string& email, const std::string& password_hash) const;
 
+    RequestResultFuture register_user(const std::string& email, const std::string& username, const std::string& password_hash) const;
+
     RequestResultFuture me();
 
     RequestResultFuture shareFile(const size_t fileID);

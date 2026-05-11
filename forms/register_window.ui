@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LoginWindow</class>
- <widget class="QMainWindow" name="LoginWindow">
+ <class>RegisterWindow</class>
+ <widget class="QMainWindow" name="RegisterWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -89,6 +89,19 @@
       </property>
       <property name="placeholderText">
        <string>Email</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="usernameLineEdit">
+      <property name="styleSheet">
+       <string notr="true">min-height: 1.25em;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="placeholderText">
+       <string>Username</string>
       </property>
      </widget>
     </item>

@@ -159,7 +159,7 @@ QPushButton:pressed {
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="registerButton">
       <property name="styleSheet">
        <string notr="true">QPushButton {
         background: transparent;
