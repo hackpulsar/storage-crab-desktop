@@ -1,5 +1,4 @@
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QMovie>
@@ -20,6 +19,8 @@ public:
 private slots:
     void onLoginButtonClicked();
 
+    void onRegisterButtonClicked();
+
 private:
     void onLoginSuccessfull(const API::RequestResult& response);
 
@@ -30,6 +31,3 @@ private:
     QMovie *loadingAnimation;
 
 };
-
-
-#endif //MAIN_WINDOW_H
