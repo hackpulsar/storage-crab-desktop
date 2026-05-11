@@ -12,8 +12,6 @@
 
 #include "token_pair.h"
 
-// TODO: refactor, move basic configurations to a helper function
-
 namespace API::Requests {
 
 inline RequestResult POST(
@@ -31,16 +29,20 @@ inline RequestResult POST(
         // String stream for retrieving
         std::ostringstream responseStream;
 
+        std::list<std::string> headers;
         // Informing that we are using JSON
-        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: application/json"}));
+        headers.push_back("Content-Type: application/json");
 
         // Add authorization field if access token is provided
         if (!access_token.empty())
-            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+            headers.push_back("Authorization: Bearer " + access_token);
 
+        request.setOpt(cURLpp::options::HttpHeader(headers));
+        
         // Adding the body and its size to request
-        request.setOpt(curlpp::options::PostFields(body.dump()));
-        request.setOpt(curlpp::options::PostFieldSize(static_cast<long>(body.dump().length())));
+        const std::string bodyStr = body.dump();
+        request.setOpt(curlpp::options::PostFields(bodyStr));
+        request.setOpt(curlpp::options::PostFieldSize(static_cast<long>(bodyStr.length())));
         request.setOpt(curlpp::options::WriteStream(&responseStream));
 
         // Timeout
@@ -64,6 +66,8 @@ inline RequestResult POST(
         return RequestResult::error_msg("Request timed out");
     } catch (cURLpp::LogicError& e) {
         return RequestResult::error_msg("Logic error: " + std::string(e.what()));
+    } catch (std::exception& e) {
+        return RequestResult::error_msg("Other error: " + std::string(e.what()));
     }
 }
 
@@ -85,11 +89,15 @@ inline RequestResult POST_UPLOAD(
         std::ostringstream responseStream;
         request.setOpt(cURLpp::options::WriteStream(&responseStream));
 
-        // Forming header
-        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: multipart/form-data"}));
+        std::list<std::string> headers;
+        // Informing that we are using JSON
+        headers.push_back("Content-Type: multipart/form-data");
+
         // Add authorization field if access token is provided
         if (!access_token.empty())
-            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+            headers.push_back("Authorization: Bearer " + access_token);
+
+        request.setOpt(cURLpp::options::HttpHeader(headers));
 
         // Forming request
         cURLpp::Forms formParts;
@@ -200,12 +208,15 @@ inline RequestResult GET(
         // String stream for retrieving
         std::ostringstream responseStream;
 
+        std::list<std::string> headers;
         // Informing that we are using JSON
-        request.setOpt(cURLpp::options::HttpHeader({"Content-Type: application/json"}));
+        headers.push_back("Content-Type: multipart/form-data");
 
         // Add authorization field if access token is provided
         if (!access_token.empty())
-            request.setOpt(cURLpp::options::HttpHeader({"Authorization: Bearer " + access_token}));
+            headers.push_back("Authorization: Bearer " + access_token);
+
+        request.setOpt(cURLpp::options::HttpHeader(headers));
 
         request.setOpt(cURLpp::options::WriteStream(&responseStream));
 

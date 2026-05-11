@@ -34,6 +34,19 @@ RequestResultFuture ApiDispatcher::login(const std::string& email, const std::st
     });
 }
 
+RequestResultFuture ApiDispatcher::register_user(const std::string& email, const std::string& username, const std::string& password_hash) const {
+    return dispatch([email, password_hash, username] {
+        return Requests::POST(
+            std::getenv("REGISTER_URL"),
+            {
+                {"email", email},
+                {"username", username},
+                {"password_hash", password_hash},
+            }
+        );
+    });
+}
+
 RequestResultFuture ApiDispatcher::me() {
     return dispatch([this] {
         return Requests::GET(std::getenv("ME_URL"), this->tokenPair.getAccess());

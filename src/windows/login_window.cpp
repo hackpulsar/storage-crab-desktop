@@ -9,6 +9,7 @@
 #include "api/api_dispatcher.hpp"
 #include "utils/watch_future.hpp"
 #include "windows/user_dashboard.h"
+#include "windows/register_window.h"
 
 LoginWindow::LoginWindow(QWidget *parent)
     : QMainWindow(parent), ui(std::make_unique<Ui::LoginWindow>())
@@ -25,6 +26,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     loadingAnimation->setFileName(QString(ASSETS_PATH) + "/loading.gif");
 
     connect(ui->loginButton, &QPushButton::clicked, this, &LoginWindow::onLoginButtonClicked);
+    connect(ui->registerButton, &QPushButton::clicked, this, &LoginWindow::onRegisterButtonClicked);
 }
 
 LoginWindow::~LoginWindow() = default;
@@ -44,15 +46,23 @@ void LoginWindow::onLoginButtonClicked() {
     loadingAnimation->start();
 
     const std::string email = ui->emailLineEdit->text().toStdString();
-    const std::string pass_hash = ui->passwordLineEdit->text().toStdString();
+    const std::size_t pass_hash = std::hash<std::string>{}(ui->passwordLineEdit->text().toStdString());
     watchFuture(
-        this, ApiDispatcher::instance().login(email, pass_hash),
+        this, ApiDispatcher::instance().login(email, std::to_string(pass_hash)),
         [this](const API::RequestResult& response) { this->onLoginSuccessfull(response); },
         [this](const API::RequestResult& response) {
             ui->errorLabel->setText(QString::fromStdString(response.extractErrorDetails()));
             this->resetLoginButton();
         }
     );
+}
+
+void LoginWindow::onRegisterButtonClicked() {
+    this->close(); // Close current window
+
+    auto *register_window = new RegisterWindow;
+    register_window->setAttribute(Qt::WA_DeleteOnClose);
+    register_window->show();
 }
 
 void LoginWindow::onLoginSuccessfull(const API::RequestResult& response) {
@@ -64,10 +74,9 @@ void LoginWindow::onLoginSuccessfull(const API::RequestResult& response) {
         [this](const API::RequestResult& response) {
             this->close(); // Close current window
 
-            // Proceed to player's personal shelter
-            auto *shelter = new UserDashboard(response.body.at("username").get<std::string>());
-            shelter->setAttribute(Qt::WA_DeleteOnClose); // Automatically frees memory allocated for this window
-            shelter->show();
+            auto *dashboard = new UserDashboard(response.body.at("username").get<std::string>());
+            dashboard->setAttribute(Qt::WA_DeleteOnClose);
+            dashboard->show();
         },
         [this](const API::RequestResult& response) {
             QMessageBox::critical(this, "Error", QString::fromStdString(response.extractErrorDetails()));
