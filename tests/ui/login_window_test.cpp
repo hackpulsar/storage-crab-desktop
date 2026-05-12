@@ -4,6 +4,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>
+#include <QPointer>
 
 #include "windows/login_window.h"
 
@@ -12,18 +13,20 @@ protected:
     void SetUp() override {
         qputenv("TOKEN_OBTAIN_URL", "itdoesntexist");
 
-        window = std::make_unique<LoginWindow>();
+        window = new LoginWindow;
+        window->setAttribute(Qt::WA_DeleteOnClose);
 
         emailLineEdit = window->findChild<QLineEdit*>("emailLineEdit");
         passwordLineEdit = window->findChild<QLineEdit*>("passwordLineEdit");
         loginButton = window->findChild<QPushButton*>("loginButton");
         errorLabel = window->findChild<QLabel*>("errorLabel");
+        registerButton = window->findChild<QPushButton*>("registerButton");
     }
 
-    std::unique_ptr<LoginWindow> window;
+    QPointer<LoginWindow> window;
 
     QLineEdit *emailLineEdit, *passwordLineEdit;
-    QPushButton* loginButton;
+    QPushButton *loginButton, *registerButton;
     QLabel* errorLabel;
 
 };
@@ -33,6 +36,7 @@ TEST_F(LoginWindowTest, HasControls) {
     EXPECT_NE(passwordLineEdit, nullptr);
     EXPECT_NE(loginButton, nullptr);
     EXPECT_NE(errorLabel, nullptr);
+    EXPECT_NE(registerButton, nullptr);
 }
 
 TEST_F(LoginWindowTest, PasswordHidden) {
@@ -48,6 +52,9 @@ TEST_F(LoginWindowTest, CorrectTitle) {
 }
 
 TEST_F(LoginWindowTest, TimeoutMessageShows) {
+    emailLineEdit->setText("test@test.com");
+    passwordLineEdit->setText("strong_password");
+
     QTest::mouseClick(loginButton, Qt::LeftButton);
     QTest::qWait(100); // wait for request to fail
     EXPECT_EQ(errorLabel->text().toStdString(), "Request timed out");
@@ -67,4 +74,10 @@ TEST_F(LoginWindowTest, LoginButtonResets) {
     EXPECT_TRUE(loginButton->text().isEmpty());
     QTest::qWait(100); // wait for request to fail
     EXPECT_EQ(loginButton->text().toStdString(), "Login");
+}
+
+TEST_F(LoginWindowTest, RegisterButtonClosesCurrent) {
+    QTest::mouseClick(registerButton, Qt::LeftButton);
+    QTest::qWait(100); // wait for event to process
+    EXPECT_TRUE(window.isNull());
 }
