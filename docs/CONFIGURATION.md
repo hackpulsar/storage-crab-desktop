@@ -43,15 +43,16 @@ cd build && make
 Create a `.env` file in the project root with backend API URLs:
 
 ```env
-TOKEN_OBTAIN_URL=https://localhost:8080/api/token/
+TOKEN_OBTAIN_URL=https://localhost:8080/api/token/get/
 TOKEN_REFRESH_URL=https://localhost:8080/api/token/refresh/
-ME_URL=https://localhost:8080/api/me/
-UPLOAD_URL=https://localhost:8080/api/upload/
+REGISTER_URL=https://localhost:8080/api/users/
+ME_URL=https://localhost:8080/api/users/me/ 
+UPLOAD_URL=https://localhost:8080/api/files/upload/
 GET_FILES_URL=https://localhost:8080/api/files/
-DOWNLOAD_URL=https://localhost:8080/api/download/
-DELETE_URL=https://localhost:8080/api/delete/
-SHARE_URL=https://localhost:8080/api/share/
-DOWNLOAD_SHARED_URL=https://localhost:8080/api/shared/
+DOWNLOAD_URL=https://localhost:8080/api/files/download/
+DELETE_URL=https://localhost:8080/api/files/delete/
+SHARE_URL=https://localhost:8080/api/files/share/
+DOWNLOAD_SHARED_URL=https://localhost:8080/api/files/download/shared/
 ```
 
 ## Running Tests
