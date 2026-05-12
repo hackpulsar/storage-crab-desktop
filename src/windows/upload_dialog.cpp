@@ -21,6 +21,8 @@ UploadDialog::UploadDialog(std::string filePath, QWidget *parent)
     loadingAnimation = new QMovie(this);
     loadingAnimation->setFileName(QString(ASSETS_PATH) + "/loading.gif");
 
+    ui->keySizeComboBox->setEnabled(false); // off by default, since AES is chosen
+
     connect(
        ui->algorithmComboBox, &QComboBox::currentTextChanged,
        this, &UploadDialog::switchEncryptionAlgorithm
