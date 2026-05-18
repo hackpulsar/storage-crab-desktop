@@ -25,9 +25,9 @@ public:
 
     void storeTokens(const std::string& access, const std::string& refresh);
     
-    RequestResultFuture login(const std::string& email, const std::string& password_hash) const;
+    RequestResultFuture login(const std::string& email, const std::string& password) const;
 
-    RequestResultFuture register_user(const std::string& email, const std::string& username, const std::string& password_hash) const;
+    RequestResultFuture register_user(const std::string& email, const std::string& username, const std::string& password) const;
 
     RequestResultFuture me();
 

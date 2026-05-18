@@ -22,26 +22,26 @@ void ApiDispatcher::storeTokens(const std::string& access, const std::string& re
     this->tokenRefreshTimer->start(9 * 60 * 1000); // 9 minutes
 }
 
-RequestResultFuture ApiDispatcher::login(const std::string& email, const std::string& password_hash) const {
-    return dispatch([email, password_hash] {
+RequestResultFuture ApiDispatcher::login(const std::string& email, const std::string& password) const {
+    return dispatch([email, password] {
         return Requests::POST(
             std::getenv("TOKEN_OBTAIN_URL"),
             {
                 {"email", email},
-                {"password_hash", password_hash},
+                {"password", password},
             }
         );
     });
 }
 
-RequestResultFuture ApiDispatcher::register_user(const std::string& email, const std::string& username, const std::string& password_hash) const {
-    return dispatch([email, password_hash, username] {
+RequestResultFuture ApiDispatcher::register_user(const std::string& email, const std::string& username, const std::string& password) const {
+    return dispatch([email, password, username] {
         return Requests::POST(
             std::getenv("REGISTER_URL"),
             {
                 {"email", email},
                 {"username", username},
-                {"password_hash", password_hash},
+                {"password", password},
             }
         );
     });

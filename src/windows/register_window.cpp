@@ -40,9 +40,9 @@ void RegisterWindow::onRegisterButtonClicked() {
 
     const std::string email = ui->emailLineEdit->text().toStdString();
     const std::string username = ui->usernameLineEdit->text().toStdString();
-    const std::size_t pass_hash = std::hash<std::string>{}(ui->passwordLineEdit->text().toStdString());
+    const std::string pass = ui->passwordLineEdit->text().toStdString();
     watchFuture(
-        this, ApiDispatcher::instance().register_user(email, username, std::to_string(pass_hash)),
+        this, ApiDispatcher::instance().register_user(email, username, pass),
         [this](const API::RequestResult& response) { this->onRegisterSuccessfull(response); },
         [this](const API::RequestResult& response) {
             ui->errorLabel->setText(QString::fromStdString(response.extractErrorDetails()));
