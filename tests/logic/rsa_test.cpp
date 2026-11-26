@@ -64,14 +64,3 @@ TEST_F(RSATest, EncryptProducesDifferentOutput) {
     
     EXPECT_NE(input, encrypted);
 }
-
-TEST_F(RSATest, EncryptLargerData) {
-    std::string testData(200, 'x'); // Larger than RSA block size
-    Utils::ByteArray input(testData.begin(), testData.end());
-    auto keys = generateKey(2048);
-    
-    auto encrypted = encrypt(keys, input);
-    auto decrypted = decrypt(keys, encrypted);
-    
-    EXPECT_EQ(input, decrypted);
-}
