@@ -77,6 +77,13 @@ Utils::ByteArray encrypt(const KeyData& config, const Utils::ByteArray& input) {
     if (!ctx || EVP_PKEY_encrypt_init(ctx) <= 0)
         throw std::runtime_error("Could not initialize RSA key encryption context");
 
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0)
+        throw std::runtime_error("Could not set RSA OAEP padding");
+    if (EVP_PKEY_CTX_set_rsa_oaep_md(ctx, EVP_sha256()) <= 0)
+        throw std::runtime_error("Could not set RSA OAEP digest");
+    if (EVP_PKEY_CTX_set_rsa_mgf1_md(ctx, EVP_sha256()) <= 0)
+        throw std::runtime_error("Could not set RSA MGF1 digest");
+
     // Getting out size
     size_t outlen = 0;
     if (EVP_PKEY_encrypt(ctx, nullptr, &outlen, plaintext, plaintext_len) <= 0)
@@ -103,6 +110,19 @@ Utils::ByteArray decrypt(const KeyData& config, const Utils::ByteArray& cipherte
     if (EVP_PKEY_decrypt_init(ctx) <= 0) {
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Could not initialize RSA decryption context");
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not set RSA OAEP padding");
+    }
+    if (EVP_PKEY_CTX_set_rsa_oaep_md(ctx, EVP_sha256()) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not set RSA OAEP digest");
+    }
+    if (EVP_PKEY_CTX_set_rsa_mgf1_md(ctx, EVP_sha256()) <= 0) {
+        EVP_PKEY_CTX_free(ctx);
+        throw std::runtime_error("Could not set RSA MGF1 digest");
     }
 
     size_t outlen = 0;
